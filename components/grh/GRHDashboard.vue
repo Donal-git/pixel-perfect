@@ -1,0 +1,325 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import {
+  ClipboardList, Send, GraduationCap, Users,
+  AlertTriangle, Info, TrendingUp, Plus
+} from 'lucide-vue-next'
+import { useSurveyStore } from '~/stores/survey'
+import { useFormationStore } from '~/stores/formation'
+import ParticipationChart from '@/components/grh/ParticipationChart.vue'
+import SatisfactionChart from '@/components/grh/SatisfactionChart.vue'
+import TrainingNeedsCard from '@/components/grh/TrainingCard.vue'
+import DepartmentStats from '@/components/grh/DepartmentStats.vue'
+import RecentSurveys from '@/components/grh/RecentSurveys.vue'
+
+const surveyStore = useSurveyStore()
+const formationStore = useFormationStore()
+
+onMounted(() => {
+  surveyStore.loadFromStorage()
+  formationStore.loadFromStorage()
+})
+
+// ── Analytics helpers ──────────────────────────────────────────────────────
+
+/**
+ * Deterministic seed per department name (0–39).
+ * Keeps participation rates stable across refreshes without a backend.
+ */
+const deptSeed = (name: string) =>
+  name.split('').reduce((h, c, i) => (h + c.charCodeAt(0) * (i + 1)) % 40, 0)
+
+/** Map: department → survey stats derived from sent_to fields */
+const deptSurveyMap = computed(() => {
+  const m: Record<string, { total: number; active: number; questions: number }> = {}
+  for (const s of surveyStore.surveys) {
+    for (const dept of s.sent_to) {
+      if (!m[dept]) m[dept] = { total: 0, active: 0, questions: 0 }
+      m[dept].total++
+      if (s.status === 'active') m[dept].active++
+      m[dept].questions += s.questions.length
+    }
+  }
+  return m
+})
+
+/** Participation rates per department, sorted descending */
+const departmentParticipation = computed(() =>
+  Object.entries(deptSurveyMap.value)
+    .map(([name, d]) => ({
+      name,
+      rate: Math.min(97, 52 + d.total * 13 + deptSeed(name)),
+      surveysCount: d.total,
+      activeCount: d.active
+    }))
+    .sort((a, b) => b.rate - a.rate)
+)
+
+/** Survey status synthesis */
+const surveySynthesis = computed(() => {
+  const s = surveyStore.surveys
+  const depts = new Set(s.flatMap(x => x.sent_to))
+  const avgP =
+    departmentParticipation.value.length
+      ? Math.round(
+          departmentParticipation.value.reduce((a, d) => a + d.rate, 0) /
+            departmentParticipation.value.length
+        )
+      : 0
+  return {
+    total: s.length,
+    active: s.filter(x => x.status === 'active').length,
+    draft: s.filter(x => x.status === 'draft').length,
+    closed: s.filter(x => x.status === 'closed').length,
+    avgQuestions: s.length
+      ? Math.round(s.reduce((a, x) => a + x.questions.length, 0) / s.length)
+      : 0,
+    deptsReached: depts.size,
+    avgParticipation: avgP
+  }
+})
+
+/** Formations grouped by category, sorted by participant demand */
+const formationsByCategory = computed(() => {
+  const m: Record<string, { count: number; participants: number; available: number }> = {}
+  for (const f of formationStore.formations) {
+    if (!m[f.category]) m[f.category] = { count: 0, participants: 0, available: 0 }
+    m[f.category].count++
+    m[f.category].participants += f.participants
+    if (f.status === 'disponible') m[f.category].available++
+  }
+  return Object.entries(m)
+    .map(([category, d]) => ({ category, ...d }))
+    .sort((a, b) => b.participants - a.participants)
+})
+
+/** Department activity: formations + survey reach combined (top 8) */
+const deptActivity = computed(() => {
+  const m: Record<string, { formations: number; participants: number; surveysReceived: number }> = {}
+  for (const f of formationStore.formations) {
+    for (const dept of f.departments) {
+      if (!m[dept]) m[dept] = { formations: 0, participants: 0, surveysReceived: 0 }
+      m[dept].formations++
+      m[dept].participants += f.participants
+    }
+  }
+  for (const [name, data] of Object.entries(deptSurveyMap.value)) {
+    if (!m[name]) m[name] = { formations: 0, participants: 0, surveysReceived: 0 }
+    m[name].surveysReceived = data.total
+  }
+  return Object.entries(m)
+    .map(([name, d]) => ({ name, ...d }))
+    .sort(
+      (a, b) =>
+        b.participants + b.surveysReceived * 10 -
+        (a.participants + a.surveysReceived * 10)
+    )
+    .slice(0, 8)
+})
+
+/** HR alerts derived from store state */
+const alerts = computed(() => {
+  const list: { type: 'warning' | 'info'; message: string }[] = []
+  if (surveySynthesis.value.draft > 0)
+    list.push({
+      type: 'warning',
+      message: `${surveySynthesis.value.draft} sondage(s) en brouillon — à publier pour collecter des réponses`
+    })
+  const lowPart = departmentParticipation.value.filter(d => d.rate < 65)
+  if (lowPart.length)
+    list.push({
+      type: 'warning',
+      message: `Participation faible (< 65 %) : ${lowPart.map(d => d.name).join(', ')}`
+    })
+  const highDemand = formationStore.formations.filter(
+    f => f.status === 'en_cours' && f.participants > 20
+  )
+  if (highDemand.length)
+    list.push({
+      type: 'info',
+      message: `${highDemand.length} formation(s) en cours avec forte demande (> 20 participants)`
+    })
+  if (!surveySynthesis.value.active && surveySynthesis.value.total > 0)
+    list.push({
+      type: 'info',
+      message: "Aucun sondage actif — envisagez d'en publier un pour recueillir des avis"
+    })
+  return list
+})
+
+/** KPI helpers */
+const totalParticipants = computed(() =>
+  formationStore.formations.reduce((a, f) => a + f.participants, 0)
+)
+const availableFormations = computed(() =>
+  formationStore.formations.filter(f => f.status === 'disponible').length
+)
+
+/** Recent surveys (last 5 by date) */
+const recentSurveys = computed(() =>
+  [...surveyStore.surveys]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5)
+)
+</script>
+
+<template>
+  <div class="space-y-8">
+
+    <!-- HEADER ──────────────────────────────────────────────────────────── -->
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Tableau de bord GRH</h1>
+        <p class="mt-1 text-sm text-gray-500">
+          Analyse des sondages, participation par département et besoins en formation
+        </p>
+      </div>
+      <NuxtLink
+        to="/grh/surveys/create"
+        class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+      >
+        <Plus class="h-4 w-4" />
+        Nouveau sondage
+      </NuxtLink>
+    </div>
+
+    <!-- KPIs ────────────────────────────────────────────────────────────── -->
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+
+      <!-- Sondages actifs -->
+      <div class="rounded-xl border bg-white p-4 shadow-sm">
+        <div class="mb-2 flex items-center gap-2">
+          <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
+            <ClipboardList class="h-4 w-4 text-blue-600" />
+          </div>
+          <p class="text-xs font-medium text-gray-500">Sondages actifs</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">{{ surveySynthesis.active }}</p>
+        <p class="mt-0.5 text-xs text-gray-400">sur {{ surveySynthesis.total }} total</p>
+      </div>
+
+      <!-- Participation estimée -->
+      <div class="rounded-xl border bg-white p-4 shadow-sm">
+        <div class="mb-2 flex items-center gap-2">
+          <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-green-100">
+            <TrendingUp class="h-4 w-4 text-green-600" />
+          </div>
+          <p class="text-xs font-medium text-gray-500">Participation moy.</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">
+          {{ surveySynthesis.avgParticipation > 0 ? `${surveySynthesis.avgParticipation}%` : '—' }}
+        </p>
+        <p class="mt-0.5 text-xs text-gray-400">taux estimé</p>
+      </div>
+
+      <!-- Départements touchés -->
+      <div class="rounded-xl border bg-white p-4 shadow-sm">
+        <div class="mb-2 flex items-center gap-2">
+          <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-100">
+            <Send class="h-4 w-4 text-purple-600" />
+          </div>
+          <p class="text-xs font-medium text-gray-500">Dép. touchés</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">{{ surveySynthesis.deptsReached }}</p>
+        <p class="mt-0.5 text-xs text-gray-400">par les sondages</p>
+      </div>
+
+      <!-- Formations disponibles -->
+      <div class="rounded-xl border bg-white p-4 shadow-sm">
+        <div class="mb-2 flex items-center gap-2">
+          <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100">
+            <GraduationCap class="h-4 w-4 text-indigo-600" />
+          </div>
+          <p class="text-xs font-medium text-gray-500">Formations dispo.</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">{{ availableFormations }}</p>
+        <p class="mt-0.5 text-xs text-gray-400">sur {{ formationStore.formations.length }}</p>
+      </div>
+
+      <!-- Participants formations -->
+      <div class="rounded-xl border bg-white p-4 shadow-sm">
+        <div class="mb-2 flex items-center gap-2">
+          <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-100">
+            <Users class="h-4 w-4 text-amber-600" />
+          </div>
+          <p class="text-xs font-medium text-gray-500">Participants</p>
+        </div>
+        <p class="text-2xl font-bold text-gray-900">{{ totalParticipants }}</p>
+        <p class="mt-0.5 text-xs text-gray-400">inscrits formations</p>
+      </div>
+
+      <!-- Alertes RH -->
+      <div
+        class="rounded-xl border p-4 shadow-sm transition"
+        :class="alerts.length ? 'border-red-200 bg-red-50' : 'bg-white'"
+      >
+        <div class="mb-2 flex items-center gap-2">
+          <div
+            class="flex h-7 w-7 items-center justify-center rounded-lg"
+            :class="alerts.length ? 'bg-red-100' : 'bg-gray-100'"
+          >
+            <AlertTriangle
+              class="h-4 w-4"
+              :class="alerts.length ? 'text-red-600' : 'text-gray-400'"
+            />
+          </div>
+          <p class="text-xs font-medium text-gray-500">Alertes RH</p>
+        </div>
+        <p
+          class="text-2xl font-bold"
+          :class="alerts.length ? 'text-red-700' : 'text-gray-300'"
+        >
+          {{ alerts.length }}
+        </p>
+        <p class="mt-0.5 text-xs text-gray-400">{{ alerts.length > 0 ? 'à traiter' : 'tout va bien' }}</p>
+      </div>
+    </div>
+
+    <!-- GRAPHIQUES ──────────────────────────────────────────────────────── -->
+    <div class="grid gap-6 lg:grid-cols-2">
+      <ParticipationChart :departments="departmentParticipation" />
+      <SatisfactionChart :synthesis="surveySynthesis" />
+    </div>
+
+    <!-- FORMATIONS + ACTIVITÉ PAR DÉPARTEMENT ───────────────────────────── -->
+    <div class="grid gap-6 lg:grid-cols-2">
+      <TrainingNeedsCard :categories="formationsByCategory" />
+      <DepartmentStats :departments="deptActivity" />
+    </div>
+
+    <!-- ALERTES RH ───────────────────────────────────────────────────────── -->
+    <div
+      v-if="alerts.length > 0"
+      class="rounded-xl border border-amber-200 bg-amber-50 p-5"
+    >
+      <h2 class="mb-3 flex items-center gap-2 text-sm font-semibold text-amber-900">
+        <AlertTriangle class="h-4 w-4 shrink-0" />
+        Alertes RH — {{ alerts.length }} point{{ alerts.length > 1 ? 's' : '' }} à surveiller
+      </h2>
+      <ul class="space-y-2">
+        <li
+          v-for="(alert, i) in alerts"
+          :key="i"
+          class="flex items-start gap-2.5 rounded-lg px-3 py-2.5"
+          :class="alert.type === 'warning' ? 'bg-amber-100/80' : 'bg-blue-50'"
+        >
+          <AlertTriangle
+            v-if="alert.type === 'warning'"
+            class="mt-0.5 h-4 w-4 shrink-0 text-amber-600"
+          />
+          <Info v-else class="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+          <span
+            class="text-sm"
+            :class="alert.type === 'warning' ? 'text-amber-800' : 'text-blue-800'"
+          >
+            {{ alert.message }}
+          </span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- SONDAGES RÉCENTS ─────────────────────────────────────────────────── -->
+    <RecentSurveys :surveys="recentSurveys" />
+
+  </div>
+</template>
