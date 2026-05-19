@@ -49,9 +49,7 @@ const form = ref({
   participants: 0
 })
 
-onMounted(() => {
-  formationStore.loadFromStorage()
-})
+onMounted(async () => { await formationStore.loadFromStorage() })
 
 // --- Filtres appliqués ---
 const filteredFormations = computed(() => {
@@ -161,18 +159,21 @@ const validateForm = () => {
 const handleSubmitForm = async () => {
   if (!validateForm()) return
   formLoading.value = true
-  await new Promise(r => setTimeout(r, 400))
 
-  if (editingFormationId.value) {
-    formationStore.updateFormation(editingFormationId.value, { ...form.value })
-    toast.success('Formation mise à jour')
-  } else {
-    formationStore.createFormation({ ...form.value })
-    toast.success('Formation créée', 'La formation a été ajoutée au catalogue')
+  try {
+    if (editingFormationId.value) {
+      await formationStore.updateFormation(editingFormationId.value, { ...form.value })
+      toast.success('Formation mise à jour')
+    } else {
+      await formationStore.createFormation({ ...form.value })
+      toast.success('Formation créée', 'La formation a été ajoutée au catalogue')
+    }
+    closeFormModal()
+  } catch (err: any) {
+    toast.error(err?.data?.message || 'Une erreur est survenue')
+  } finally {
+    formLoading.value = false
   }
-
-  formLoading.value = false
-  closeFormModal()
 }
 
 // --- Suppression ---
@@ -181,10 +182,14 @@ const openDeleteModal = (id: string) => {
   showDeleteModal.value = true
 }
 
-const confirmDelete = () => {
+const confirmDelete = async () => {
   if (deletingFormationId.value) {
-    formationStore.deleteFormation(deletingFormationId.value)
-    toast.success('Formation supprimée')
+    try {
+      await formationStore.deleteFormation(deletingFormationId.value)
+      toast.success('Formation supprimée')
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Impossible de supprimer cette formation')
+    }
   }
   showDeleteModal.value = false
   deletingFormationId.value = null

@@ -28,8 +28,8 @@ const draftSurveys = ref<any[]>([])
 onMounted(async () => {
   loading.value = true
   try {
-    surveyStore.loadFromStorage()
-    surveyStore.loadResponsesFromStorage()
+    await surveyStore.loadFromStorage()
+    await surveyStore.loadResponsesFromStorage()
 
     if (currentUser.value?.id) {
       // Get submitted responses

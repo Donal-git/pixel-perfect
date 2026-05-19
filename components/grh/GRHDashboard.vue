@@ -15,9 +15,11 @@ import RecentSurveys from '@/components/grh/RecentSurveys.vue'
 const surveyStore = useSurveyStore()
 const formationStore = useFormationStore()
 
-onMounted(() => {
-  surveyStore.loadFromStorage()
-  formationStore.loadFromStorage()
+onMounted(async () => {
+  await Promise.all([
+    surveyStore.loadFromStorage(),
+    formationStore.loadFromStorage()
+  ])
 })
 
 // ── Analytics helpers ──────────────────────────────────────────────────────

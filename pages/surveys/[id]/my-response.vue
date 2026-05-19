@@ -28,8 +28,8 @@ onMounted(async () => {
   loading.value = true
   try {
     // Load stores
-    surveyStore.loadFromStorage()
-    surveyStore.loadResponsesFromStorage()
+    await surveyStore.loadFromStorage()
+    await surveyStore.loadResponsesFromStorage()
 
     if (currentUser.value?.id) {
       // Get survey with response

@@ -20,11 +20,13 @@ const surveyStore = useSurveyStore()
 const formationStore = useFormationStore()
 const appConfigStore = useAppConfigStore()
 
-onMounted(() => {
-  personnelStore.loadFromStorage()
-  surveyStore.loadFromStorage()
-  formationStore.loadFromStorage()
-  appConfigStore.loadFromStorage()
+onMounted(async () => {
+  await Promise.all([
+    personnelStore.loadFromStorage(),
+    surveyStore.loadFromStorage(),
+    formationStore.loadFromStorage(),
+    appConfigStore.loadFromStorage()
+  ])
 })
 
 // ── KPIs réels ──────────────────────────────────────────────────────────────

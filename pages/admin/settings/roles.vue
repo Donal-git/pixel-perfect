@@ -17,9 +17,7 @@ import { useToast } from '~/composables/useToast'
 const appConfigStore = useAppConfigStore()
 const toast = useToast()
 
-onMounted(() => {
-  appConfigStore.loadFromStorage()
-})
+onMounted(async () => { await appConfigStore.loadFromStorage() })
 
 // ── État ─────────────────────────────────────────────────────────────────────
 const roles = computed(() => appConfigStore.roles)
@@ -113,47 +111,45 @@ const closeDeleteModal = () => {
   deletingRoleId.value = null
 }
 
-const handleCreate = () => {
+const handleCreate = async () => {
   if (!newRoleName.value.trim()) {
     toast.error('Le nom est obligatoire')
     return
   }
-
-  const exists = appConfigStore.roles.some(
-    r => r.name.toLowerCase() === newRoleName.value.trim().toLowerCase()
-  )
-  if (exists) {
-    toast.error('Ce rôle existe déjà')
-    return
+  try {
+    await appConfigStore.addRole(newRoleName.value.trim(), newRoleDescription.value)
+    toast.success('Rôle créé', newRoleName.value.trim())
+    closeCreateModal()
+  } catch (err: any) {
+    toast.error(err?.data?.message || 'Impossible de créer ce rôle')
   }
-
-  appConfigStore.addRole(newRoleName.value.trim(), newRoleDescription.value)
-  toast.success('Rôle créé', newRoleName.value.trim())
-  closeCreateModal()
 }
 
 const togglePermission = (permission: PermissionKey) => {
   editPermissions.value[permission] = !editPermissions.value[permission]
 }
 
-const handleEdit = () => {
+const handleEdit = async () => {
   if (!editRoleName.value.trim()) {
     toast.error('Le nom est obligatoire')
     return
   }
-
   if (editingRoleId.value) {
-    appConfigStore.updateRole(editingRoleId.value, {
-      name: editRoleName.value.trim(),
-      description: editRoleDescription.value,
-      permissions: { ...editPermissions.value }
-    })
-    toast.success('Rôle mis à jour', editRoleName.value.trim())
+    try {
+      await appConfigStore.updateRole(editingRoleId.value, {
+        name: editRoleName.value.trim(),
+        description: editRoleDescription.value,
+        permissions: { ...editPermissions.value }
+      })
+      toast.success('Rôle mis à jour', editRoleName.value.trim())
+      closeEditModal()
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Impossible de modifier ce rôle')
+    }
   }
-  closeEditModal()
 }
 
-const handleDelete = () => {
+const handleDelete = async () => {
   if (deletingRoleId.value) {
     const role = appConfigStore.getRoleById(deletingRoleId.value)
     if (role && role.userCount > 0) {
@@ -161,9 +157,12 @@ const handleDelete = () => {
       closeDeleteModal()
       return
     }
-
-    appConfigStore.deleteRole(deletingRoleId.value)
-    toast.success('Rôle supprimé', role?.name || '')
+    try {
+      await appConfigStore.deleteRole(deletingRoleId.value)
+      toast.success('Rôle supprimé', role?.name || '')
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Impossible de supprimer ce rôle')
+    }
   }
   closeDeleteModal()
 }

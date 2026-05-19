@@ -33,7 +33,7 @@ onMounted(async () => {
   loading.value = true
   try {
     // Load personnel store
-    personnelStore.loadFromStorage()
+    await personnelStore.loadFromStorage()
 
     // Get current user's profile
     if (currentUser.value?.id) {
@@ -61,25 +61,24 @@ const handleSave = async () => {
   saving.value = true
   try {
     if (currentUser.value?.id && profileData.value) {
-      // Employé ne peut modifier que: nom, email, téléphone
-      // Département et poste sont modifiables par admin uniquement
-      personnelStore.updatePersonnel(currentUser.value.id, {
+      await personnelStore.updateMember(currentUser.value.id, {
         name: form.value.name,
         email: form.value.email,
         phone: form.value.phone
-        // Pas de department ou position - modifiables par admin uniquement
       })
 
-      // Also update auth store user
-      authStore.user.name = form.value.name
-      if (import.meta.client) {
-        localStorage.setItem('auth_user', JSON.stringify(authStore.user))
+      if (authStore.user) {
+        authStore.user.name = form.value.name
+        authStore.user.email = form.value.email
+        if (import.meta.client) {
+          localStorage.setItem('auth_user', JSON.stringify(authStore.user))
+        }
       }
     }
-    alert('✓ Profil mis à jour avec succès\n\nVos informations personnelles (nom, email, téléphone) ont été modifiées.\n\nNote: Votre département et votre poste sont gérés par l\'administrateur.')
-  } catch (error) {
+    alert('✓ Profil mis à jour avec succès')
+  } catch (error: any) {
     console.error('Error saving profile:', error)
-    alert('✗ Erreur lors de la mise à jour du profil')
+    alert('✗ ' + (error?.data?.message || 'Erreur lors de la mise à jour du profil'))
   } finally {
     saving.value = false
   }

@@ -75,8 +75,10 @@ import UIAvatar from '~/components/ui/Avatar.vue'
 // import type { User } from '~/types'
 
 import { useAuthStore } from '~/stores/auth'
+import { useApi } from '~/composables/useApi'
 
 const authStore = useAuthStore()
+const api = useApi()
 
 interface ProfileForm {
   fullName: string
@@ -116,27 +118,34 @@ const updateProfile = async () => {
     return
   }
 
+  if (!authStore.user?.id) return
+
   isUpdating.value = true
-  
+
   try {
-    // TODO: Appel API réel
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Update store si nom/email changés
-    if (authStore.user) {
-      authStore.user.name = profileForm.fullName
-      authStore.user.email = profileForm.email
+    const payload: Record<string, string> = {
+      name: profileForm.fullName,
+      email: profileForm.email,
+      phone: profileForm.phone
     }
-    
-    console.log('Profil mis à jour:', profileForm)
+    if (profileForm.newPassword) {
+      payload.password = profileForm.newPassword
+    }
+
+    const updated: any = await api.put(`/users/${authStore.user.id}`, payload)
+
+    if (authStore.user) {
+      authStore.user.name = updated.name
+      authStore.user.email = updated.email
+    }
+
     alert('✅ Profil mis à jour avec succès!')
-    
-    // Reset passwords
+
     profileForm.newPassword = ''
     profileForm.confirmPassword = ''
-    
-  } catch (error) {
-    alert('❌ Erreur lors de la mise à jour')
+
+  } catch (error: any) {
+    alert('❌ ' + (error?.data?.message || 'Erreur lors de la mise à jour'))
   } finally {
     isUpdating.value = false
   }

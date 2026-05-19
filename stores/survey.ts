@@ -28,261 +28,185 @@ export interface SurveyResponse {
   status: 'draft' | 'submitted'
 }
 
-const STORAGE_KEY = 'grh_surveys'
-const RESPONSES_STORAGE_KEY = 'grh_survey_responses'
-
-const initialData: Survey[] = [
-  {
-    id: 'demo-1',
-    title: 'Satisfaction des employés Q1 2024',
-    description: 'Évaluation trimestrielle de la satisfaction au travail',
-    isAnonymous: true,
-    status: 'active',
-    questions: [
-      {
-        id: 'q1',
-        question_text: 'Comment évaluez-vous votre satisfaction globale ?',
-        question_type: 'likert',
-        options: [],
-        is_required: true
-      }
-    ],
-    created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
-    sent_to: ['RH', 'Finance', 'IT']
-  },
-  {
-    id: 'demo-2',
-    title: 'Évaluation annuelle des compétences',
-    description: 'Bilan des compétences techniques et soft skills de l\'équipe',
-    isAnonymous: false,
-    status: 'draft',
-    questions: [],
-    created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
-    sent_to: []
-  },
-  {
-    id: 'demo-3',
-    title: 'Feedback management 2023',
-    description: 'Retour d\'expérience sur le management de l\'année écoulée',
-    isAnonymous: true,
-    status: 'closed',
-    questions: [],
-    created_at: new Date(Date.now() - 86400000 * 30).toISOString(),
-    sent_to: ['Tous les départements']
-  }
-]
-
 export const useSurveyStore = defineStore('survey', () => {
-  const surveys = ref<Survey[]>([])
+  const config    = useRuntimeConfig()
+  const surveys   = ref<Survey[]>([])
   const responses = ref<SurveyResponse[]>([])
+  const loading   = ref(false)
 
-  const loadFromStorage = () => {
-    if (!process.client) return
+  const headers = (): Record<string, string> => {
+    const token = import.meta.client ? localStorage.getItem('auth_token') : null
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
+
+  // const api = (path: string, opts: Record<string, any> = {}) =>
+  //   $fetch<any>(`${config.public.apiBase}${path}`, { headers: headers(), ...opts })
+
+  const api = async (path: string, opts: Record<string, any> = {}) => {
+  try {
+    return await $fetch<any>(`${config.public.apiBase}${path}`, {
+      headers: headers(),
+      ...opts
+    })
+  } catch (error: any) {
+    console.error("❌ API ERROR:", {
+      url: path,
+      status: error?.response?.status,
+      message: error?.message,
+      data: error?.response?._data
+    })
+
+    throw error
+  }
+}
+
+  // ── Load surveys from API ───────────────────────────────────────────────────
+  // const loadFromStorage = async () => {
+  //   if (!import.meta.client) return
+  //   loading.value = true
+  //   try {
+  //     const res = await api('/surveys')
+  //     surveys.value = res.data as Survey[]
+  //   } catch (e) {
+  //     console.error('Erreur chargement sondages:', e)
+  //   } finally {
+  //     loading.value = false
+  //   }
+  // }
+
+
+const loadFromStorage = async () => {
+  if (!import.meta.client) return
+
+  loading.value = true
+
+  try {
+    const res = await api('/surveys')
+
+    surveys.value = res.data ?? res
+
+  } catch (e) {
+    console.error('❌ Erreur chargement sondages:', e)
+  } finally {
+    loading.value = false
+  }
+}
+
+
+  const loadResponsesFromStorage = async () => {
+    if (!import.meta.client) return
     try {
-      const saved = localStorage.getItem(STORAGE_KEY)
-      if (saved) {
-        surveys.value = JSON.parse(saved)
-      } else {
-        surveys.value = initialData
-        saveToStorage()
-      }
-    } catch {
-      surveys.value = initialData
+      const res = await api('/surveys/responses/mine')
+      responses.value = res.data as SurveyResponse[]
+    } catch (e) {
+      console.error('Erreur chargement réponses:', e)
     }
   }
 
-  const loadResponsesFromStorage = () => {
-    if (!process.client) return
-    try {
-      const saved = localStorage.getItem(RESPONSES_STORAGE_KEY)
-      if (saved) {
-        responses.value = JSON.parse(saved)
-      } else {
-        responses.value = []
-        saveResponsesToStorage()
-      }
-    } catch {
-      responses.value = []
-    }
-  }
-
-  const saveToStorage = () => {
-    if (!process.client) return
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(surveys.value))
-  }
-
-  const saveResponsesToStorage = () => {
-    if (!process.client) return
-    localStorage.setItem(RESPONSES_STORAGE_KEY, JSON.stringify(responses.value))
-  }
-
-  const createSurvey = (data: Omit<Survey, 'id' | 'created_at' | 'sent_to'>) => {
-    const survey: Survey = {
-      ...data,
-      id: crypto.randomUUID(),
-      created_at: new Date().toISOString(),
-      sent_to: []
-    }
+  // ── CRUD surveys ────────────────────────────────────────────────────────────
+  const createSurvey = async (data: Omit<Survey, 'id' | 'created_at' | 'sent_to'>) => {
+    const res = await api('/surveys', { method: 'POST', body: data })
+    const survey = res.data as Survey
     surveys.value.unshift(survey)
-    saveToStorage()
     return survey
   }
 
-  const updateSurvey = (id: string, data: Partial<Survey>) => {
-    const index = surveys.value.findIndex(s => s.id === id)
-    if (index !== -1) {
-      surveys.value[index] = { ...surveys.value[index], ...data }
-      saveToStorage()
-    }
+  const updateSurvey = async (id: string, data: Partial<Survey>) => {
+    const res = await api(`/surveys/${id}`, { method: 'PUT', body: data })
+    const updated = res.data as Survey
+    const idx = surveys.value.findIndex(s => s.id === id)
+    if (idx !== -1) surveys.value[idx] = updated
   }
 
-  const deleteSurvey = (id: string) => {
+  const deleteSurvey = async (id: string) => {
+    await api(`/surveys/${id}`, { method: 'DELETE' })
     surveys.value = surveys.value.filter(s => s.id !== id)
-    saveToStorage()
   }
 
-  const sendSurvey = (id: string, departments: string[]) => {
-    updateSurvey(id, { status: 'active', sent_to: departments })
+  const sendSurvey = async (id: string, departments: string[]) => {
+    const res = await api(`/surveys/${id}/send`, { method: 'POST', body: { departments } })
+    const updated = res.data as Survey
+    const idx = surveys.value.findIndex(s => s.id === id)
+    if (idx !== -1) surveys.value[idx] = updated
   }
 
-  const getSurveyById = (id: string) => {
-    return surveys.value.find(s => s.id === id) || null
+  const getSurveyById = (id: string) => surveys.value.find(s => s.id === id) || null
+
+  // ── Responses ───────────────────────────────────────────────────────────────
+  const submitResponse = async (survey_id: string, employee_id: string, answers: Record<string, any>) => {
+    const res = await api(`/surveys/${survey_id}/responses`, {
+      method: 'POST',
+      body: { answers, status: 'submitted' }
+    })
+    const response = res.data as SurveyResponse
+    const idx = responses.value.findIndex(r => r.survey_id === survey_id && r.employee_id === employee_id)
+    if (idx !== -1) responses.value[idx] = response
+    else responses.value.push(response)
   }
 
-  // 📝 Survey Responses Management
-  const submitResponse = (survey_id: string, employee_id: string, answers: Record<string, any>) => {
-    const existingResponse = responses.value.find(
-      r => r.survey_id === survey_id && r.employee_id === employee_id
-    )
-
-    if (existingResponse) {
-      existingResponse.answers = answers
-      existingResponse.status = 'submitted'
-      existingResponse.submitted_at = new Date().toISOString()
-    } else {
-      const response: SurveyResponse = {
-        id: crypto.randomUUID(),
-        survey_id,
-        employee_id,
-        answers,
-        submitted_at: new Date().toISOString(),
-        status: 'submitted'
-      }
-      responses.value.push(response)
-    }
-
-    saveResponsesToStorage()
+  const saveResponseDraft = async (survey_id: string, employee_id: string, answers: Record<string, any>) => {
+    const res = await api(`/surveys/${survey_id}/responses`, {
+      method: 'POST',
+      body: { answers, status: 'draft' }
+    })
+    const response = res.data as SurveyResponse
+    const idx = responses.value.findIndex(r => r.survey_id === survey_id && r.employee_id === employee_id)
+    if (idx !== -1) responses.value[idx] = response
+    else responses.value.push(response)
   }
 
-  const saveResponseDraft = (survey_id: string, employee_id: string, answers: Record<string, any>) => {
-    const existingResponse = responses.value.find(
-      r => r.survey_id === survey_id && r.employee_id === employee_id
-    )
+  const getResponseByEmployeeAndSurvey = (survey_id: string, employee_id: string) =>
+    responses.value.find(r => r.survey_id === survey_id && r.employee_id === employee_id) || null
 
-    if (existingResponse) {
-      existingResponse.answers = answers
-    } else {
-      const response: SurveyResponse = {
-        id: crypto.randomUUID(),
-        survey_id,
-        employee_id,
-        answers,
-        submitted_at: new Date().toISOString(),
-        status: 'draft'
-      }
-      responses.value.push(response)
-    }
+  const hasEmployeeResponded = (survey_id: string, employee_id: string) =>
+    responses.value.some(r => r.survey_id === survey_id && r.employee_id === employee_id && r.status === 'submitted')
 
-    saveResponsesToStorage()
-  }
+  // Returns active surveys — visible to all employees regardless of their ID
+  const getEmployeeSurveys = () =>
+    surveys.value.filter(s => s.status === 'active')
 
-  const getResponseByEmployeeAndSurvey = (survey_id: string, employee_id: string) => {
-    return responses.value.find(
-      r => r.survey_id === survey_id && r.employee_id === employee_id
-    ) || null
-  }
+  const getEmployeeResponses = (employee_id: string) =>
+    responses.value.filter(r => r.employee_id === employee_id)
 
-  const hasEmployeeResponded = (survey_id: string, employee_id: string) => {
-    return responses.value.some(
-      r => r.survey_id === survey_id && r.employee_id === employee_id && r.status === 'submitted'
-    )
-  }
+  const getEmployeeSubmittedResponses = (employee_id: string) =>
+    responses.value.filter(r => r.employee_id === employee_id && r.status === 'submitted')
 
-  const getEmployeeSurveys = (employee_id: string) => {
-    return surveys.value.filter(s => s.status === 'active')
-  }
-
-  // 📊 Récupérer les réponses de l'employé
-  const getEmployeeResponses = (employee_id: string) => {
-    return responses.value.filter(r => r.employee_id === employee_id)
-  }
-
-  const getEmployeeSubmittedResponses = (employee_id: string) => {
-    return responses.value.filter(
-      r => r.employee_id === employee_id && r.status === 'submitted'
-    )
-  }
-
-  const getEmployeeDraftResponses = (employee_id: string) => {
-    return responses.value.filter(
-      r => r.employee_id === employee_id && r.status === 'draft'
-    )
-  }
+  const getEmployeeDraftResponses = (employee_id: string) =>
+    responses.value.filter(r => r.employee_id === employee_id && r.status === 'draft')
 
   const getSurveyWithResponse = (survey_id: string, employee_id: string) => {
-    const survey = surveys.value.find(s => s.id === survey_id)
-    const response = responses.value.find(
-      r => r.survey_id === survey_id && r.employee_id === employee_id
-    )
+    const survey   = surveys.value.find(s => s.id === survey_id)
+    const response = responses.value.find(r => r.survey_id === survey_id && r.employee_id === employee_id)
     return survey
-      ? {
-          survey,
-          response: response || null,
-          isSubmitted: response?.status === 'submitted' || false,
-          isDraft: response?.status === 'draft' || false
-        }
+      ? { survey, response: response || null, isSubmitted: response?.status === 'submitted' || false, isDraft: response?.status === 'draft' || false }
       : null
   }
 
-  const submitDraftResponse = (survey_id: string, employee_id: string) => {
-    const response = responses.value.find(
-      r => r.survey_id === survey_id && r.employee_id === employee_id
-    )
-    if (response && response.status === 'draft') {
-      response.status = 'submitted'
-      response.submitted_at = new Date().toISOString()
-      saveResponsesToStorage()
+  const submitDraftResponse = async (survey_id: string, employee_id: string) => {
+    const existing = responses.value.find(r => r.survey_id === survey_id && r.employee_id === employee_id)
+    if (existing && existing.status === 'draft') {
+      await api(`/surveys/${survey_id}/responses`, {
+        method: 'POST',
+        body: { answers: existing.answers, status: 'submitted' }
+      })
+      existing.status = 'submitted'
       return true
     }
     return false
   }
 
   const activeSurveys = computed(() => surveys.value.filter(s => s.status === 'active'))
-  const draftSurveys = computed(() => surveys.value.filter(s => s.status === 'draft'))
+  const draftSurveys  = computed(() => surveys.value.filter(s => s.status === 'draft'))
   const closedSurveys = computed(() => surveys.value.filter(s => s.status === 'closed'))
 
   return {
-    surveys,
-    responses,
-    activeSurveys,
-    draftSurveys,
-    closedSurveys,
-    loadFromStorage,
-    loadResponsesFromStorage,
-    createSurvey,
-    updateSurvey,
-    deleteSurvey,
-    sendSurvey,
-    getSurveyById,
-    submitResponse,
-    saveResponseDraft,
-    getResponseByEmployeeAndSurvey,
-    hasEmployeeResponded,
-    getEmployeeSurveys,
-    getEmployeeResponses,
-    getEmployeeSubmittedResponses,
-    getEmployeeDraftResponses,
-    getSurveyWithResponse,
-    submitDraftResponse
+    surveys, responses, loading,
+    activeSurveys, draftSurveys, closedSurveys,
+    loadFromStorage, loadResponsesFromStorage,
+    createSurvey, updateSurvey, deleteSurvey, sendSurvey, getSurveyById,
+    submitResponse, saveResponseDraft, getResponseByEmployeeAndSurvey,
+    hasEmployeeResponded, getEmployeeSurveys,
+    getEmployeeResponses, getEmployeeSubmittedResponses, getEmployeeDraftResponses,
+    getSurveyWithResponse, submitDraftResponse
   }
 })

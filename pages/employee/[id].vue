@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { useApi } from '~/composables/useApi'
 
 
 
 // 📍 route param
 const route = useRoute()
-const userId = route.params.userId as string
+const api = useApi()
+const userId = (route.params.id || route.params.userId) as string
 
 // 📦 state
 const loading = ref(true)
@@ -39,43 +41,24 @@ const DOC_CATEGORIES = [
   { value: "autre", label: "Autre" },
 ]
 
-// 🔄 LOAD DATA (mock)
+// 🔄 LOAD DATA
 const loadData = async () => {
   loading.value = true
-
   try {
-    // 👉 Remplacer par API
-    // const profileData = await $fetch(`/api/users/${userId}`)
-    // const docsData = await $fetch(`/api/documents/${userId}`)
-
+    const user: any = await api.get(`/users/${userId}`)
     const profileData = {
-      user_id: userId,
-      full_name: "Jean Dupont",
-      email: "jean@mail.com",
-      phone: "70000000",
-      department: "RH",
-      position: "Manager"
+      user_id: user.id,
+      full_name: user.name,
+      email: user.email,
+      phone: user.phone || '',
+      department: user.department,
+      position: user.position
     }
-
-    const docsData = [
-      {
-        id: '1',
-        file_name: 'contrat.pdf',
-        category: 'contrat',
-        file_size: 12000,
-        created_at: new Date().toISOString()
-      }
-    ]
-
     profile.value = profileData
-    documents.value = docsData
-
     form.value = { ...profileData }
-
   } catch (e) {
     console.error(e)
   }
-
   loading.value = false
 }
 
@@ -84,17 +67,19 @@ onMounted(loadData)
 // 💾 SAVE
 const handleSave = async () => {
   saving.value = true
-
   try {
-    // await $fetch(`/api/users/${userId}`, { method: 'PUT', body: form.value })
-
-    console.log('SAVE', form.value)
-
+    await api.put(`/users/${userId}`, {
+      name: form.value.full_name,
+      email: form.value.email,
+      phone: form.value.phone,
+      department: form.value.department,
+      position: form.value.position
+    })
+    profile.value = { ...profile.value, ...form.value }
     alert("Profil mis à jour")
-  } catch (e) {
-    alert("Erreur")
+  } catch (e: any) {
+    alert(e?.data?.message || "Erreur lors de la mise à jour")
   }
-
   saving.value = false
 }
 

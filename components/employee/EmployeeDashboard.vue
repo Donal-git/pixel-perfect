@@ -30,10 +30,12 @@ onMounted(async () => {
   loading.value = true
   try {
     // Load stores
-    surveyStore.loadFromStorage()
-    surveyStore.loadResponsesFromStorage()
-    formationStore.loadFromStorage()
-    formationStore.loadRegistrationsFromStorage()
+    await Promise.all([
+      surveyStore.loadFromStorage(),
+      surveyStore.loadResponsesFromStorage(),
+      formationStore.loadFromStorage(),
+      formationStore.loadRegistrationsFromStorage()
+    ])
 
     // Get active surveys
     surveys.value = surveyStore.activeSurveys
@@ -65,19 +67,17 @@ const goToSurvey = (surveyId: string) => {
 }
 
 // 📚 Register for formation
-const registerForFormation = (formationId: string) => {
+const registerForFormation = async (formationId: string) => {
   if (currentUser.value?.id) {
-    formationStore.registerForFormation(formationId, currentUser.value.id)
-    // Update my formations list
+    await formationStore.registerForFormation(formationId, currentUser.value.id)
     myFormations.value = formationStore.getEmployeeFormations(currentUser.value.id)
   }
 }
 
 // 📚 Unregister from formation
-const unregisterFromFormation = (formationId: string) => {
+const unregisterFromFormation = async (formationId: string) => {
   if (currentUser.value?.id) {
-    formationStore.unregisterFromFormation(formationId, currentUser.value.id)
-    // Update my formations list
+    await formationStore.unregisterFromFormation(formationId, currentUser.value.id)
     myFormations.value = formationStore.getEmployeeFormations(currentUser.value.id)
   }
 }

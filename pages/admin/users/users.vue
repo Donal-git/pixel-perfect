@@ -55,8 +55,8 @@ const emptyForm = (): Omit<PersonnelMember, 'id' | 'registeredAt'> => ({
 const createForm = ref(emptyForm())
 const editForm = ref(emptyForm())
 
-onMounted(() => {
-  personnelStore.loadFromStorage()
+onMounted(async () => {
+  await personnelStore.loadFromStorage()
 })
 
 // ── Computed ─────────────────────────────────────────────────────────────────
@@ -202,34 +202,50 @@ const validateEditForm = (): boolean => {
   return true
 }
 
-const handleCreate = () => {
+const handleCreate = async () => {
   if (!validateCreateForm()) return
-  personnelStore.addMember({ ...createForm.value })
-  toast.success('Membre ajouté', createForm.value.name)
-  closeCreateModal()
+  try {
+    await personnelStore.addMember({ ...createForm.value })
+    toast.success('Membre ajouté', createForm.value.name)
+    closeCreateModal()
+  } catch (err: any) {
+    toast.error(err?.data?.message || 'Impossible de créer ce membre')
+  }
 }
 
-const handleEdit = () => {
+const handleEdit = async () => {
   if (!validateEditForm()) return
   if (editingMember.value) {
-    personnelStore.updateMember(editingMember.value.id, { ...editForm.value })
-    toast.success('Membre mis à jour', editForm.value.name)
+    try {
+      await personnelStore.updateMember(editingMember.value.id, { ...editForm.value })
+      toast.success('Membre mis à jour', editForm.value.name)
+      closeEditModal()
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Impossible de modifier ce membre')
+    }
   }
-  closeEditModal()
 }
 
-const handleDelete = () => {
+const handleDelete = async () => {
   if (deletingMember.value) {
-    personnelStore.deleteMember(deletingMember.value.id)
-    toast.success('Membre supprimé', deletingMember.value.name)
+    try {
+      await personnelStore.deleteMember(deletingMember.value.id)
+      toast.success('Membre supprimé', deletingMember.value.name)
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Impossible de supprimer ce membre')
+    }
   }
   closeDeleteModal()
 }
 
-const toggleStatus = (member: PersonnelMember) => {
-  personnelStore.toggleStatus(member.id)
-  const next = member.status === 'actif' ? 'inactif' : 'actif'
-  toast.default(`${member.name} → ${next}`)
+const toggleStatus = async (member: PersonnelMember) => {
+  try {
+    await personnelStore.toggleStatus(member.id)
+    const next = member.status === 'actif' ? 'inactif' : 'actif'
+    toast.default(`${member.name} → ${next}`)
+  } catch (err: any) {
+    toast.error(err?.data?.message || 'Impossible de changer le statut')
+  }
 }
 
 const toggleDropdown = (id: string) => {

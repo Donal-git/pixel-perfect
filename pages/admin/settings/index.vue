@@ -24,8 +24,9 @@ const appConfigStore = useAppConfigStore()
 const authStore = useAuthStore()
 const toast = useToast()
 
-onMounted(() => {
-  appConfigStore.loadFromStorage()
+onMounted(async () => {
+  await appConfigStore.loadFromStorage()
+  loadSettings()
 })
 
 // ── Navigation cards ────────────────────────────────────────────────────────
@@ -99,27 +100,24 @@ const loadSettings = () => {
   generalSettings.maxLoginAttempts = config.maxLoginAttempts
 }
 
-onMounted(() => {
-  loadSettings()
-})
-
 // ── Sauvegarde ──────────────────────────────────────────────────────────────
 const saveSettings = async () => {
   loading.value = true
-
-  await new Promise(r => setTimeout(r, 500))
-
-  appConfigStore.updateConfig({
-    companyName: generalSettings.companyName,
-    maxSurveysPerMonth: generalSettings.maxSurveysPerMonth,
-    allowAnonymousSurveys: generalSettings.allowAnonymousSurveys,
-    requireEmailVerification: generalSettings.requireEmailVerification,
-    sessionTimeout: generalSettings.sessionTimeout,
-    maxLoginAttempts: generalSettings.maxLoginAttempts
-  })
-
-  loading.value = false
-  toast.success('Paramètres enregistrés', 'Les modifications ont été appliquées')
+  try {
+    await appConfigStore.updateConfig({
+      companyName: generalSettings.companyName,
+      maxSurveysPerMonth: generalSettings.maxSurveysPerMonth,
+      allowAnonymousSurveys: generalSettings.allowAnonymousSurveys,
+      requireEmailVerification: generalSettings.requireEmailVerification,
+      sessionTimeout: generalSettings.sessionTimeout,
+      maxLoginAttempts: generalSettings.maxLoginAttempts
+    })
+    toast.success('Paramètres enregistrés', 'Les modifications ont été appliquées')
+  } catch (err: any) {
+    toast.error(err?.data?.message || 'Impossible de sauvegarder les paramètres')
+  } finally {
+    loading.value = false
+  }
 }
 
 // ── Statistiques ────────────────────────────────────────────────────────────

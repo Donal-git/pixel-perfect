@@ -42,9 +42,7 @@ const deletingSurveyId = ref<string | null>(null)
 // --- Filtre statut ---
 const activeFilter = ref<'all' | 'active' | 'draft' | 'closed'>('all')
 
-onMounted(() => {
-  surveyStore.loadFromStorage()
-})
+onMounted(async () => { await surveyStore.loadFromStorage() })
 
 const filteredSurveys = computed(() => {
   if (activeFilter.value === 'all') return surveyStore.surveys
@@ -100,11 +98,15 @@ const handleSendSurvey = async () => {
     return
   }
   sendingLoading.value = true
-  await new Promise(r => setTimeout(r, 500))
-  surveyStore.sendSurvey(sendingSurveyId.value, [...selectedDepartments.value])
-  toast.success('Sondage envoyé', `Envoyé à : ${selectedDepartments.value.join(', ')}`)
-  closeSendModal()
-  sendingLoading.value = false
+  try {
+    await surveyStore.sendSurvey(sendingSurveyId.value, [...selectedDepartments.value])
+    toast.success('Sondage envoyé', `Envoyé à : ${selectedDepartments.value.join(', ')}`)
+    closeSendModal()
+  } catch (err: any) {
+    toast.error(err?.data?.message || "Erreur lors de l'envoi")
+  } finally {
+    sendingLoading.value = false
+  }
 }
 
 // --- Actions suppression ---
@@ -113,10 +115,14 @@ const openDeleteModal = (id: string) => {
   showDeleteModal.value = true
 }
 
-const confirmDelete = () => {
+const confirmDelete = async () => {
   if (deletingSurveyId.value) {
-    surveyStore.deleteSurvey(deletingSurveyId.value)
-    toast.success('Sondage supprimé')
+    try {
+      await surveyStore.deleteSurvey(deletingSurveyId.value)
+      toast.success('Sondage supprimé')
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Impossible de supprimer ce sondage')
+    }
   }
   showDeleteModal.value = false
   deletingSurveyId.value = null

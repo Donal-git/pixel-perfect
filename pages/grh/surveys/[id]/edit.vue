@@ -38,8 +38,8 @@ const questionTypeLabels: Record<string, string> = {
 const needsOptions = (type: string) => type === 'multiple_choice' || type === 'checkbox'
 
 // --- Chargement du sondage existant ---
-onMounted(() => {
-  surveyStore.loadFromStorage()
+onMounted(async () => {
+  await surveyStore.loadFromStorage()
   const survey = surveyStore.getSurveyById(surveyId)
   if (!survey) {
     notFound.value = true
@@ -118,19 +118,21 @@ const handleSave = async (status?: 'draft' | 'active') => {
   if (!validate()) return
 
   loading.value = true
-  await new Promise(r => setTimeout(r, 400))
-
-  surveyStore.updateSurvey(surveyId, {
-    title: title.value.trim(),
-    description: description.value.trim(),
-    isAnonymous: isAnonymous.value,
-    questions: questions.value.map(q => ({ ...q })),
-    ...(status ? { status } : {})
-  })
-
-  toast.success('Sondage mis à jour', 'Les modifications ont été enregistrées')
-  loading.value = false
-  await navigateTo('/grh/surveys')
+  try {
+    await surveyStore.updateSurvey(surveyId, {
+      title: title.value.trim(),
+      description: description.value.trim(),
+      isAnonymous: isAnonymous.value,
+      questions: questions.value.map(q => ({ ...q })),
+      ...(status ? { status } : {})
+    })
+    toast.success('Sondage mis à jour', 'Les modifications ont été enregistrées')
+    await navigateTo('/grh/surveys')
+  } catch (err: any) {
+    toast.error(err?.data?.message || 'Impossible de modifier ce sondage')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -281,7 +283,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
             <div v-if="needsOptions(question.question_type)" class="space-y-2">
               <p class="text-xs font-medium text-gray-600">Options de réponse :</p>
               <div
-                v-for="(opt, i) in question.options"
+                v-for="(_opt, i) in question.options"
                 :key="i"
                 class="flex items-center gap-2"
               >

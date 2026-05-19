@@ -104,24 +104,24 @@ const handleSave = async (status: 'draft' | 'active') => {
   if (!validate()) return
 
   loading.value = true
-  await new Promise(r => setTimeout(r, 400))
-
-  surveyStore.loadFromStorage()
-  surveyStore.createSurvey({
-    title: title.value.trim(),
-    description: description.value.trim(),
-    isAnonymous: isAnonymous.value,
-    status,
-    questions: questions.value.map(q => ({ ...q }))
-  })
-
-  toast.success(
-    status === 'active' ? 'Sondage publié' : 'Brouillon enregistré',
-    status === 'active' ? 'Le sondage est maintenant actif' : 'Vous pouvez le modifier plus tard'
-  )
-
-  loading.value = false
-  await navigateTo('/grh/surveys')
+  try {
+    await surveyStore.createSurvey({
+      title: title.value.trim(),
+      description: description.value.trim(),
+      isAnonymous: isAnonymous.value,
+      status,
+      questions: questions.value.map(q => ({ ...q }))
+    })
+    toast.success(
+      status === 'active' ? 'Sondage publié' : 'Brouillon enregistré',
+      status === 'active' ? 'Le sondage est maintenant actif' : 'Vous pouvez le modifier plus tard'
+    )
+    await navigateTo('/grh/surveys')
+  } catch (err: any) {
+    toast.error(err?.data?.message || 'Impossible de sauvegarder le sondage')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

@@ -11,6 +11,7 @@ import {
 } from 'lucide-vue-next'
 import type { FunctionalComponent } from 'vue'
 import { useAuthStore } from '~/stores/auth'
+import AppToast from '~/components/ui/AppToast.vue'
 
 const authStore = useAuthStore()
 const route = useRoute()

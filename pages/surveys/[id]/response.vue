@@ -32,8 +32,8 @@ onMounted(async () => {
   loading.value = true
   try {
     // Load survey store
-    surveyStore.loadFromStorage()
-    surveyStore.loadResponsesFromStorage()
+    await surveyStore.loadFromStorage()
+    await surveyStore.loadResponsesFromStorage()
 
     // Get survey by ID
     const foundSurvey = surveyStore.getSurveyById(surveyId)
@@ -94,7 +94,7 @@ const handleSubmit = async () => {
   submitting.value = true
 
   try {
-    surveyStore.submitResponse(surveyId, currentUser.value.id, answers.value)
+    await surveyStore.submitResponse(surveyId, currentUser.value.id, answers.value)
     alert('✓ Vos réponses ont été envoyées avec succès')
     await router.push('/employee')
   } catch (error) {
@@ -113,7 +113,7 @@ const handleSaveDraft = async () => {
   }
 
   try {
-    surveyStore.saveResponseDraft(surveyId, currentUser.value.id, answers.value)
+    await surveyStore.saveResponseDraft(surveyId, currentUser.value.id, answers.value)
     alert('✓ Brouillon enregistré')
   } catch (error) {
     console.error('Error saving draft:', error)
@@ -121,7 +121,7 @@ const handleSaveDraft = async () => {
   }
 }
 
-// � Submit draft to GRH
+// Submit draft to GRH
 const submitDraftToGRH = async () => {
   const errors = validateAnswers()
 
@@ -138,8 +138,7 @@ const submitDraftToGRH = async () => {
   submitting.value = true
 
   try {
-    // Save as submitted
-    surveyStore.submitResponse(surveyId, currentUser.value.id, answers.value)
+    await surveyStore.submitResponse(surveyId, currentUser.value.id, answers.value)
     isResponseSubmitted.value = true
     isResponseDraft.value = false
     alert('✓ Vos réponses ont été envoyées au GRH avec succès')

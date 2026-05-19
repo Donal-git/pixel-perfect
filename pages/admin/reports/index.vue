@@ -22,10 +22,12 @@ const formationStore = useFormationStore()
 const personnelStore = usePersonnelStore()
 const toast = useToast()
 
-onMounted(() => {
-  surveyStore.loadFromStorage()
-  formationStore.loadFromStorage()
-  personnelStore.loadFromStorage()
+onMounted(async () => {
+  await Promise.all([
+    surveyStore.loadFromStorage(),
+    formationStore.loadFromStorage(),
+    personnelStore.loadFromStorage()
+  ])
 })
 
 // ── Synthèse Sondages ──────────────────────────────────────────────────────
