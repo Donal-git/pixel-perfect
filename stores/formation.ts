@@ -30,6 +30,7 @@ export const useFormationStore = defineStore('formation', () => {
 
   const headers = (): Record<string, string> => {
     const token = import.meta.client ? localStorage.getItem('auth_token') : null
+    // console.log("TOKEN =", token)
     return token ? { Authorization: `Bearer ${token}` } : {}
   }
 
@@ -62,7 +63,7 @@ export const useFormationStore = defineStore('formation', () => {
 
   // ── CRUD formations ─────────────────────────────────────────────────────────
   const createFormation = async (data: Omit<Formation, 'id' | 'created_at'>) => {
-    const res = await api('/formations', { method: 'POST', body: data })
+    const res = await api('/formation', { method: 'POST', body: data })
     const formation = res.data as Formation
     formations.value.unshift(formation)
     return formation

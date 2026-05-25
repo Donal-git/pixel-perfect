@@ -22,7 +22,7 @@ interface NavItem { label: string; href: string; icon: FunctionalComponent }
 const navByRole: Record<Role, NavItem[]> = {
   admin: [
     { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
-    { label: "Sondages", href: "/surveys", icon: ClipboardList },
+    // { label: "Sondages", href: "/surveys", icon: ClipboardList },
     { label: "Personnel", href: "/personnel", icon: Users },
     { label: "Rapports", href: "/admin/reports", icon: FileText },
     { label: "Paramètres", href: "/admin/settings", icon: Settings },
