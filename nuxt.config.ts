@@ -36,7 +36,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: 'http://localhost:5000/api'
+      apiBase: 'https://back-pixel-perfect.onrender.com/api'
     }
   }
 })

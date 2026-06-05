@@ -15,17 +15,16 @@ import {
   CheckCircle
 } from 'lucide-vue-next'
 import { usePersonnelStore, type PersonnelMember } from '~/stores/personnel'
+import { useAppConfigStore } from '~/stores/appConfig'
 import { useAuthStore } from '~/stores/auth'
 import { useToast } from '~/composables/useToast'
 
 const personnelStore = usePersonnelStore()
+const appConfigStore = useAppConfigStore()
 const authStore = useAuthStore()
 const toast = useToast()
 
-const DEPARTMENTS = [
-  'Direction', 'RH', 'Finance', 'IT',
-  'Commercial', 'Production', 'Marketing', 'Logistique'
-]
+const departments = computed(() => appConfigStore.departmentNames)
 
 // ── État ─────────────────────────────────────────────────────────────────────
 const searchQuery = ref('')
@@ -56,7 +55,10 @@ const createForm = ref(emptyForm())
 const editForm = ref(emptyForm())
 
 onMounted(async () => {
-  await personnelStore.loadFromStorage()
+  await Promise.all([
+    personnelStore.loadFromStorage(),
+    appConfigStore.loadFromStorage()
+  ])
 })
 
 // ── Computed ─────────────────────────────────────────────────────────────────
@@ -571,7 +573,7 @@ onUnmounted(() => {
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Département <span class="text-red-500">*</span></label>
                   <select v-model="createForm.department" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
-                    <option v-for="d in DEPARTMENTS" :key="d" :value="d">{{ d }}</option>
+                    <option v-for="d in departments" :key="d" :value="d">{{ d }}</option>
                   </select>
                 </div>
                 <div>
@@ -637,7 +639,7 @@ onUnmounted(() => {
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Département <span class="text-red-500">*</span></label>
                   <select v-model="editForm.department" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
-                    <option v-for="d in DEPARTMENTS" :key="d" :value="d">{{ d }}</option>
+                    <option v-for="d in departments" :key="d" :value="d">{{ d }}</option>
                   </select>
                 </div>
                 <div>

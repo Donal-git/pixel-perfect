@@ -63,14 +63,14 @@ const handleLogin = async () => {
           />
         </div>
 
-        <div class="pt-2 space-y-2">
+        <!-- <div class="pt-2 space-y-2">
           <p class="text-xs text-gray-500 text-center">
             Admin: admin@test.com / admin123
           </p>
           <p class="text-xs text-gray-500 text-center">
             GRH: grh@test.com / grh123 | Employé: employee@test.com / employee123
           </p>
-        </div>
+        </div> -->
 
         <button
           type="submit"

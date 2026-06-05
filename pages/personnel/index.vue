@@ -6,20 +6,19 @@ import {
   Eye, EyeOff, RefreshCw, Copy, Check, KeyRound
 } from 'lucide-vue-next'
 import { usePersonnelStore, type PersonnelMember } from '~/stores/personnel'
+import { useAppConfigStore } from '~/stores/appConfig'
 import { useAuthStore } from '~/stores/auth'
 import { useToast } from '~/composables/useToast'
 
 const personnelStore = usePersonnelStore()
+const appConfigStore = useAppConfigStore()
 const authStore = useAuthStore()
 const toast = useToast()
 
 // ── Vérification rôle ───────────────────────────────────────────────────────
 const isAdmin = computed(() => authStore.role === 'admin')
 
-const DEPARTMENTS = [
-  'Direction', 'RH', 'Finance', 'IT',
-  'Commercial', 'Production', 'Marketing', 'Logistique'
-]
+const DEPARTMENTS = computed(() => appConfigStore.departmentNames)
 
 // ── Filtres ────────────────────────────────────────────────────────────────
 const searchQuery    = ref('')
@@ -53,7 +52,7 @@ const emptyForm = (): Omit<PersonnelMember, 'id' | 'registeredAt' | 'password'> 
   name:       '',
   email:      '',
   role:       'employee',
-  department: 'RH',
+  department: appConfigStore.departmentNames[0] ?? 'RH',
   position:   '',
   phone:      '',
   status:     'actif'
@@ -61,7 +60,12 @@ const emptyForm = (): Omit<PersonnelMember, 'id' | 'registeredAt' | 'password'> 
 
 const form = ref(emptyForm())
 
-onMounted(async () => { await personnelStore.loadFromStorage() })
+onMounted(async () => {
+  await Promise.all([
+    personnelStore.loadFromStorage(),
+    appConfigStore.loadFromStorage()
+  ])
+})
 
 // ── Générateur de mot de passe sécurisé ───────────────────────────────────
 const generatePassword = (): string => {

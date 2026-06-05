@@ -35,18 +35,32 @@ onMounted(async () => {
     // Load personnel store
     await personnelStore.loadFromStorage()
 
-    // Get current user's profile
-    if (currentUser.value?.id) {
-      const profile = personnelStore.getPersonnelById(currentUser.value.id)
-      if (profile) {
-        profileData.value = profile
-        form.value = {
-          name: profile.name,
-          email: profile.email,
-          phone: profile.phone,
-          department: profile.department,
-          position: profile.position
-        }
+    // Get current user's profile from personnel store, fallback to auth user
+    const userId = currentUser.value?.id
+    let profile = userId ? personnelStore.getPersonnelById(userId) : null
+
+    if (!profile && currentUser.value) {
+      profile = {
+        id: currentUser.value.id,
+        name: currentUser.value.name ?? '',
+        email: currentUser.value.email ?? '',
+        role: currentUser.value.role ?? 'employee',
+        department: currentUser.value.department ?? '',
+        position: currentUser.value.position ?? '',
+        phone: currentUser.value.phone ?? '',
+        status: currentUser.value.status ?? 'actif',
+        registeredAt: currentUser.value.registeredAt ?? ''
+      }
+    }
+
+    if (profile) {
+      profileData.value = profile
+      form.value = {
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone,
+        department: profile.department,
+        position: profile.position
       }
     }
   } catch (error) {

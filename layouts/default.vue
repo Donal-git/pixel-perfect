@@ -35,7 +35,7 @@ const navByRole: Record<Role, NavItem[]> = {
   ],
   employee: [
     { label: "Tableau de bord", href: "/employee", icon: LayoutDashboard },
-    { label: "Mes sondages", href: "/surveys", icon: ClipboardList },
+    // { label: "Mes sondages", href: "/surveys", icon: ClipboardList },
   ],
 }
 

@@ -7,8 +7,10 @@ export interface Formation {
   category: string
   duration: string
   level: 'débutant' | 'intermédiaire' | 'avancé'
-  status: 'disponible' | 'en_cours' | 'terminée'
+  status: 'brouillon' | 'disponible' | 'en_cours' | 'terminée'
   departments: string[]
+  start_date?: string
+  end_date?: string
   created_at: string
   participants: number
 }
@@ -30,14 +32,13 @@ export const useFormationStore = defineStore('formation', () => {
 
   const headers = (): Record<string, string> => {
     const token = import.meta.client ? localStorage.getItem('auth_token') : null
-    // console.log("TOKEN =", token)
     return token ? { Authorization: `Bearer ${token}` } : {}
   }
 
   const api = (path: string, opts: Record<string, any> = {}) =>
     $fetch<any>(`${config.public.apiBase}${path}`, { headers: headers(), ...opts })
 
-  // ── Load formations from API ────────────────────────────────────────────────
+  // ── Load ────────────────────────────────────────────────────────────────────
   const loadFromStorage = async () => {
     if (!import.meta.client) return
     loading.value = true
@@ -54,14 +55,13 @@ export const useFormationStore = defineStore('formation', () => {
   const loadRegistrationsFromStorage = async () => {
     if (!import.meta.client) return
     try {
-      // Registrations are loaded on-demand via getFormationRegistrations
       registrations.value = []
     } catch (e) {
       console.error('Erreur chargement inscriptions:', e)
     }
   }
 
-  // ── CRUD formations ─────────────────────────────────────────────────────────
+  // ── CRUD ────────────────────────────────────────────────────────────────────
   const createFormation = async (data: Omit<Formation, 'id' | 'created_at'>) => {
     const res = await api('/formation', { method: 'POST', body: data })
     const formation = res.data as Formation
@@ -74,6 +74,15 @@ export const useFormationStore = defineStore('formation', () => {
     const updated = res.data as Formation
     const idx = formations.value.findIndex(f => f.id === id)
     if (idx !== -1) formations.value[idx] = updated
+    return updated
+  }
+
+  const publishFormation = async (id: string) => {
+    const res = await api(`/formation/${id}`, { method: 'PUT', body: { status: 'disponible' } })
+    const updated = res.data as Formation
+    const idx = formations.value.findIndex(f => f.id === id)
+    if (idx !== -1) formations.value[idx] = updated
+    return updated
   }
 
   const deleteFormation = async (id: string) => {
@@ -84,19 +93,28 @@ export const useFormationStore = defineStore('formation', () => {
   const getFormationById = (id: string) =>
     formations.value.find(f => f.id === id) || null
 
-  // ── Registration management ─────────────────────────────────────────────────
+  // ── Inscriptions ────────────────────────────────────────────────────────────
   const registerForFormation = async (formation_id: string, _employee_id: string) => {
-    const res = await api(`/formation/${formation_id}/register`, { method: 'POST' })
+    const formation = formations.value.find(f => f.id === formation_id)
+    if (formation?.end_date && new Date(formation.end_date) < new Date()) {
+      throw new Error('Les inscriptions pour cette formation sont clôturées.')
+    }
+    const res = await api(`/formation/${formation_id}/register`, {
+      method: 'POST',
+      body: { employee_id: _employee_id }
+    })
     const reg = res.data as FormationRegistration
     registrations.value.push(reg)
-    // Increment local participant count
     const f = formations.value.find(f => f.id === formation_id)
     if (f) f.participants++
     return reg
   }
 
   const unregisterFromFormation = async (formation_id: string, _employee_id: string) => {
-    await api(`/formation/${formation_id}/register`, { method: 'DELETE' })
+    await api(`/formation/${formation_id}/register`, {
+      method: 'DELETE',
+      body: { employee_id: _employee_id }
+    })
     registrations.value = registrations.value.filter(r => r.formation_id !== formation_id)
     const f = formations.value.find(f => f.id === formation_id)
     if (f && f.participants > 0) f.participants--
@@ -128,14 +146,16 @@ export const useFormationStore = defineStore('formation', () => {
     if (idx !== -1) registrations.value[idx] = updated
   }
 
+  // ── Computed ────────────────────────────────────────────────────────────────
   const availableFormations = computed(() => formations.value.filter(f => f.status === 'disponible'))
   const ongoingFormations   = computed(() => formations.value.filter(f => f.status === 'en_cours'))
+  const draftFormations     = computed(() => formations.value.filter(f => f.status === 'brouillon'))
 
   return {
     formations, registrations, loading,
-    availableFormations, ongoingFormations,
+    availableFormations, ongoingFormations, draftFormations,
     loadFromStorage, loadRegistrationsFromStorage,
-    createFormation, updateFormation, deleteFormation, getFormationById,
+    createFormation, updateFormation, publishFormation, deleteFormation, getFormationById,
     registerForFormation, unregisterFromFormation,
     isEmployeeRegistered, getEmployeeFormations,
     getFormationRegistrations, updateRegistrationStatus

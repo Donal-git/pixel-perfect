@@ -134,12 +134,160 @@ const recentActivities = computed(() => {
 })
 
 // ── Export ──────────────────────────────────────────────────────────────────
-const exportReport = (type: 'pdf' | 'excel') => {
+const downloadBlob = (blob: Blob, filename: string) => {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+const buildReportSummary = () => {
+  return [
+    ['Statistique', 'Valeur'],
+    ['Employés actifs', globalKPIs.value.totalEmployees],
+    ['Participation sondages', `${globalKPIs.value.surveyParticipation}%`],
+    ['Taux de complétion formations', `${globalKPIs.value.formationCompletion}%`],
+    ['Score d’engagement', `${globalKPIs.value.engagementScore}/100`],
+    ['Total sondages', surveyStats.value.total],
+    ['Sondages actifs', surveyStats.value.active],
+    ['Sondages brouillons', surveyStats.value.draft],
+    ['Sondages terminés', surveyStats.value.closed],
+    ['Total formations', formationStats.value.total],
+    ['Formations disponibles', formationStats.value.disponible],
+    ['Formations en cours', formationStats.value.enCours],
+    ['Formations terminées', formationStats.value.terminee]
+  ]
+}
+
+const exportExcelReport = async () => {
+  if (!import.meta.client) return
+  const XLSX = await import('xlsx')
+  const workbook = XLSX.utils.book_new()
+
+  const summarySheet = XLSX.utils.aoa_to_sheet(buildReportSummary())
+  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Résumé')
+
+  const surveyData = surveyStore.surveys.map(s => ({
+    Titre: s.title,
+    Statut: s.status === 'active' ? 'En cours' : s.status === 'draft' ? 'Brouillon' : 'Terminé',
+    CrééLe: formatDate(s.created_at)
+  }))
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(surveyData), 'Sondages')
+
+  const formationData = formationStore.formations.map(f => ({
+    Titre: f.title,
+    Catégorie: f.category,
+    Statut: f.status === 'disponible' ? 'Disponible' : f.status === 'en_cours' ? 'En cours' : 'Terminée',
+    Participants: f.participants,
+    CrééLe: formatDate(f.created_at)
+  }))
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(formationData), 'Formations')
+
+  const activityData = recentActivities.value.map(a => ({
+    Type: a.type === 'survey' ? 'Sondage' : 'Formation',
+    Titre: a.title,
+    Statut: a.status,
+    Date: a.date
+  }))
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(activityData), 'Activités')
+
+  const excelArray = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+  const blob = new Blob([excelArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+  const filename = `rapport-${new Date().toISOString().slice(0, 10)}.xlsx`
+  downloadBlob(blob, filename)
+}
+
+const exportPdfReport = async () => {
+  if (!import.meta.client) return
+  const { jsPDF } = await import('jspdf')
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' })
+  let y = 40
+  const lineHeight = 18
+
+  doc.setFontSize(18)
+  doc.text('Rapport RH', 40, y)
+  y += 30
+
+  doc.setFontSize(12)
+  doc.text(`Date: ${formatDate(new Date().toISOString())}`, 40, y)
+  y += 24
+
+  doc.setFontSize(14)
+  doc.text('Indicateurs clés', 40, y)
+  y += 20
+
+  const summaryRows = buildReportSummary().slice(1)
+  summaryRows.forEach(([label, value]) => {
+    doc.text(`${label}: ${value}`, 40, y)
+    y += lineHeight
+    if (y > 760) {
+      doc.addPage()
+      y = 40
+    }
+  })
+
+  y += 10
+  doc.setFontSize(14)
+  doc.text('Sondages', 40, y)
+  y += 20
+  surveyStore.surveys.slice(0, 5).forEach(s => {
+    doc.setFontSize(12)
+    doc.text(`• ${s.title} — ${s.status === 'active' ? 'En cours' : s.status === 'draft' ? 'Brouillon' : 'Terminé'} (${formatDate(s.created_at)})`, 40, y)
+    y += lineHeight
+    if (y > 760) {
+      doc.addPage()
+      y = 40
+    }
+  })
+
+  y += 10
+  doc.setFontSize(14)
+  doc.text('Formations', 40, y)
+  y += 20
+  formationStore.formations.slice(0, 5).forEach(f => {
+    doc.setFontSize(12)
+    doc.text(`• ${f.title} — ${f.category} — ${f.participants} participants`, 40, y)
+    y += lineHeight
+    if (y > 760) {
+      doc.addPage()
+      y = 40
+    }
+  })
+
+  y += 10
+  doc.setFontSize(14)
+  doc.text('Activités récentes', 40, y)
+  y += 20
+  recentActivities.value.forEach(a => {
+    doc.setFontSize(12)
+    doc.text(`• ${a.type === 'survey' ? 'Sondage' : 'Formation'}: ${a.title} — ${a.status} — ${a.date}`, 40, y)
+    y += lineHeight
+    if (y > 760) {
+      doc.addPage()
+      y = 40
+    }
+  })
+
+  doc.save(`rapport-${new Date().toISOString().slice(0, 10)}.pdf`)
+}
+
+const exportReport = async (type: 'pdf' | 'excel') => {
   toast.success('Export en cours', `Génération du rapport ${type.toUpperCase()}...`)
-  // Simulation d'export
-  setTimeout(() => {
-    toast.success('Export terminé', 'Le rapport a été généré avec succès')
-  }, 1500)
+  try {
+    if (type === 'excel') {
+      await exportExcelReport()
+    } else {
+      await exportPdfReport()
+    }
+    toast.success('Export terminé', `Le rapport ${type.toUpperCase()} a été téléchargé.`)
+  } catch (error) {
+    console.error('Erreur export rapport:', error)
+    toast.error('Erreur export', 'Impossible de générer le rapport. Veuillez réessayer.')
+  }
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────────

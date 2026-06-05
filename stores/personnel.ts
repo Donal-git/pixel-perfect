@@ -28,12 +28,24 @@ export const usePersonnelStore = defineStore('personnel', () => {
     $fetch<any>(`${config.public.apiBase}${path}`, { headers: headers(), ...opts })
 
   // ── Load all members from API ───────────────────────────────────────────────
+  const normalizeMember = (raw: any): PersonnelMember => ({
+    id: raw.id ?? raw._id,
+    name: raw.name ?? raw.username ?? raw.fullName ?? '',
+    email: raw.email ?? '',
+    role: raw.role ?? 'employee',
+    department: raw.department ?? raw.dept ?? '',
+    position: raw.position ?? raw.jobTitle ?? '',
+    phone: raw.phone ?? raw.tel ?? '',
+    status: raw.status ?? 'actif',
+    registeredAt: raw.registeredAt ?? raw.createdAt ?? raw.created_at ?? ''
+  })
+
   const loadFromStorage = async () => {
     if (!import.meta.client) return
     loading.value = true
     try {
       const res = await api('/users', { params: { limit: 200 } })
-      members.value = res.data as PersonnelMember[]
+      members.value = (res.data as any[]).map(normalizeMember)
     } catch (e) {
       console.error('Erreur chargement personnel:', e)
     } finally {

@@ -45,7 +45,7 @@ onMounted(async () => {
 
     // Get employee's registered formations
     if (currentUser.value?.id) {
-      myFormations.value = formationStore.getEmployeeFormations(currentUser.value.id)
+      myFormations.value = await formationStore.getEmployeeFormations(currentUser.value.id)
 
       // Check which surveys have been answered
       surveys.value.forEach((survey) => {
@@ -69,16 +69,24 @@ const goToSurvey = (surveyId: string) => {
 // 📚 Register for formation
 const registerForFormation = async (formationId: string) => {
   if (currentUser.value?.id) {
-    await formationStore.registerForFormation(formationId, currentUser.value.id)
-    myFormations.value = formationStore.getEmployeeFormations(currentUser.value.id)
+    try {
+      await formationStore.registerForFormation(formationId, currentUser.value.id)
+      myFormations.value = await formationStore.getEmployeeFormations(currentUser.value.id)
+    } catch (error) {
+      console.error('Erreur inscription formation:', error)
+    }
   }
 }
 
 // 📚 Unregister from formation
 const unregisterFromFormation = async (formationId: string) => {
   if (currentUser.value?.id) {
-    await formationStore.unregisterFromFormation(formationId, currentUser.value.id)
-    myFormations.value = formationStore.getEmployeeFormations(currentUser.value.id)
+    try {
+      await formationStore.unregisterFromFormation(formationId, currentUser.value.id)
+      myFormations.value = await formationStore.getEmployeeFormations(currentUser.value.id)
+    } catch (error) {
+      console.error('Erreur désinscription formation:', error)
+    }
   }
 }
 
@@ -105,8 +113,18 @@ const stats = computed(() => ({
 
 // Check if employee is registered
 const isRegisteredForFormation = (formationId: string) => {
-  if (!currentUser.value?.id) return false
-  return formationStore.isEmployeeRegistered(formationId, currentUser.value.id)
+  return myFormations.value.some((formation) => formation.id === formationId)
+}
+
+// Check if registration is closed (end_date is in the past)
+const isFormationExpired = (formation: any) => {
+  if (!formation.end_date) return false
+  return new Date(formation.end_date) < new Date()
+}
+
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 </script>
 
@@ -246,22 +264,32 @@ const isRegisteredForFormation = (formationId: string) => {
           <div
             v-for="formation in formations"
             :key="formation.id"
-            class="border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-transparent hover:shadow-md transition"
+            class="flex flex-col border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-transparent hover:shadow-md transition"
+            :class="isFormationExpired(formation) ? 'opacity-75 from-gray-50' : ''"
           >
-            <div class="mb-3">
-              <h3 class="font-semibold text-foreground">{{ formation.title }}</h3>
-              <p class="text-xs text-muted-foreground mt-1">{{ formation.category }}</p>
+            <!-- En-tête -->
+            <div class="mb-3 flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <h3 class="font-semibold text-foreground leading-snug">{{ formation.title }}</h3>
+                <p class="text-xs text-muted-foreground mt-1">{{ formation.category }}</p>
+              </div>
+              <!-- Badge expiré -->
+              <span
+                v-if="isFormationExpired(formation)"
+                class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500"
+              >Clôturé</span>
             </div>
 
-            <p class="text-sm text-muted-foreground mb-3">{{ formation.description }}</p>
+            <p class="text-sm text-muted-foreground mb-3 line-clamp-2">{{ formation.description }}</p>
 
-            <div class="space-y-2 mb-4">
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-muted-foreground">Durée:</span>
+            <!-- Détails -->
+            <div class="space-y-2 mb-4 text-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-muted-foreground">Durée :</span>
                 <span class="font-medium">{{ formation.duration }}</span>
               </div>
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-muted-foreground">Niveau:</span>
+              <div class="flex items-center justify-between">
+                <span class="text-muted-foreground">Niveau :</span>
                 <span
                   :class="{
                     'px-2 py-1 rounded text-xs font-medium': true,
@@ -269,30 +297,71 @@ const isRegisteredForFormation = (formationId: string) => {
                     'bg-yellow-100 text-yellow-800': formation.level === 'intermédiaire',
                     'bg-red-100 text-red-800': formation.level === 'avancé'
                   }"
-                >
-                  {{ formation.level }}
-                </span>
+                >{{ formation.level }}</span>
               </div>
-              <div class="flex items-center justify-between text-sm">
-                <span class="text-muted-foreground">Participants:</span>
+              <div class="flex items-center justify-between">
+                <span class="text-muted-foreground">Participants :</span>
                 <span class="font-medium">{{ formation.participants }}</span>
+              </div>
+              <!-- Dates si présentes -->
+              <div v-if="formation.start_date || formation.end_date" class="flex items-center justify-between">
+                <span class="text-muted-foreground">Période :</span>
+                <span
+                  class="text-xs font-medium"
+                  :class="isFormationExpired(formation) ? 'text-red-500' : 'text-gray-700'"
+                >
+                  <template v-if="formation.start_date && formation.end_date">
+                    {{ formatDate(formation.start_date) }} → {{ formatDate(formation.end_date) }}
+                  </template>
+                  <template v-else-if="formation.end_date">
+                    Jusqu'au {{ formatDate(formation.end_date) }}
+                  </template>
+                  <template v-else>
+                    Début : {{ formatDate(formation.start_date) }}
+                  </template>
+                </span>
               </div>
             </div>
 
-            <button
-              @click="
-                isRegisteredForFormation(formation.id)
+            <!-- Bouton d'action -->
+            <div class="mt-auto">
+              <!-- Formation expirée + non inscrit : bouton désactivé -->
+              <button
+                v-if="isFormationExpired(formation) && !isRegisteredForFormation(formation.id)"
+                disabled
+                class="w-full px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-400 cursor-not-allowed"
+              >
+                Inscriptions clôturées
+              </button>
+
+              <!-- Formation expirée + déjà inscrit : peut se désinscrire -->
+              <div v-else-if="isFormationExpired(formation) && isRegisteredForFormation(formation.id)" class="space-y-2">
+                <p class="text-center text-xs text-amber-600 bg-amber-50 rounded px-2 py-1">
+                  Vous êtes inscrit · Inscriptions clôturées
+                </p>
+                <button
+                  @click="unregisterFromFormation(formation.id)"
+                  class="w-full px-3 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-800 hover:bg-red-200 transition"
+                >
+                  Se désinscrire
+                </button>
+              </div>
+
+              <!-- Formation active : comportement normal -->
+              <button
+                v-else
+                @click="isRegisteredForFormation(formation.id)
                   ? unregisterFromFormation(formation.id)
-                  : registerForFormation(formation.id)
-              "
-              :class="{
-                'w-full px-3 py-2 rounded-lg font-medium transition text-sm': true,
-                'bg-primary text-primary-foreground hover:bg-primary/90': !isRegisteredForFormation(formation.id),
-                'bg-red-100 text-red-800 hover:bg-red-200': isRegisteredForFormation(formation.id)
-              }"
-            >
-              {{ isRegisteredForFormation(formation.id) ? '✓ Se désinscrire' : 'S\'inscrire' }}
-            </button>
+                  : registerForFormation(formation.id)"
+                :class="{
+                  'w-full px-3 py-2 rounded-lg font-medium transition text-sm': true,
+                  'bg-primary text-primary-foreground hover:bg-primary/90': !isRegisteredForFormation(formation.id),
+                  'bg-red-100 text-red-800 hover:bg-red-200': isRegisteredForFormation(formation.id)
+                }"
+              >
+                {{ isRegisteredForFormation(formation.id) ? '✓ Se désinscrire' : 'S\'inscrire' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
