@@ -146,6 +146,16 @@ export const useFormationStore = defineStore('formation', () => {
     if (idx !== -1) registrations.value[idx] = updated
   }
 
+  // ── Formations pour un département donné ──────────────────────────────────────
+  const getFormationsForDepartment = (department?: string): Formation[] => {
+    return formations.value.filter(f => {
+      if (f.status !== 'disponible') return false
+      if (!department) return false
+      // Inclure si pour ce département, "Tous les départements", ou pas de restriction
+      return f.departments.includes(department) || f.departments.includes('Tous les départements') || f.departments.length === 0
+    })
+  }
+
   // ── Computed ────────────────────────────────────────────────────────────────
   const availableFormations = computed(() => formations.value.filter(f => f.status === 'disponible'))
   const ongoingFormations   = computed(() => formations.value.filter(f => f.status === 'en_cours'))
@@ -158,6 +168,6 @@ export const useFormationStore = defineStore('formation', () => {
     createFormation, updateFormation, publishFormation, deleteFormation, getFormationById,
     registerForFormation, unregisterFromFormation,
     isEmployeeRegistered, getEmployeeFormations,
-    getFormationRegistrations, updateRegistrationStatus
+    getFormationRegistrations, updateRegistrationStatus, getFormationsForDepartment
   }
 })

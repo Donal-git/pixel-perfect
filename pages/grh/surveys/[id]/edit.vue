@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { Plus, Trash2, GripVertical, ChevronLeft, Save, AlertCircle } from 'lucide-vue-next'
+import { ref, computed, onMounted } from 'vue'
+import { Plus, Trash2, GripVertical, ChevronLeft, Save, AlertCircle, Lock, CalendarX2 } from 'lucide-vue-next'
 import { useSurveyStore } from '~/stores/survey'
 import { useToast } from '~/composables/useToast'
 
@@ -16,6 +16,11 @@ const notFound = ref(false)
 const title = ref('')
 const description = ref('')
 const isAnonymous = ref(false)
+const closesAt = ref('')
+const currentStatus = ref<'draft' | 'active' | 'closed'>('draft')
+
+// Les questions sont verrouillées dès que le sondage est actif
+const questionsLocked = computed(() => currentStatus.value === 'active')
 
 interface Question {
   id: string
@@ -48,6 +53,8 @@ onMounted(async () => {
   title.value = survey.title
   description.value = survey.description
   isAnonymous.value = survey.isAnonymous
+  closesAt.value = survey.closes_at || ''
+  currentStatus.value = survey.status
   questions.value = survey.questions.map(q => ({ ...q, options: [...q.options] }))
 
   if (questions.value.length === 0) {
@@ -123,7 +130,9 @@ const handleSave = async (status?: 'draft' | 'active') => {
       title: title.value.trim(),
       description: description.value.trim(),
       isAnonymous: isAnonymous.value,
-      questions: questions.value.map(q => ({ ...q })),
+      closes_at: closesAt.value || undefined,
+      // Ne jamais envoyer les questions si le sondage est actif (protection serveur)
+      ...(!questionsLocked.value ? { questions: questions.value.map(q => ({ ...q })) } : {}),
       ...(status ? { status } : {})
     })
     toast.success('Sondage mis à jour', 'Les modifications ont été enregistrées')
@@ -169,6 +178,21 @@ const handleSave = async (status?: 'draft' | 'active') => {
     </div>
 
     <template v-else>
+      <!-- BANNIÈRE VERROUILLAGE -->
+      <div
+        v-if="questionsLocked"
+        class="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4"
+      >
+        <Lock class="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+        <div>
+          <p class="text-sm font-semibold text-amber-800">Sondage actif — questions verrouillées</p>
+          <p class="mt-0.5 text-xs text-amber-700">
+            Ce sondage a déjà été publié. Pour préserver l'intégrité des réponses existantes, les questions ne peuvent plus être modifiées.
+            Vous pouvez toujours mettre à jour le titre, la description et la date de clôture.
+          </p>
+        </div>
+      </div>
+
       <!-- INFORMATIONS GÉNÉRALES -->
       <div class="rounded-xl border bg-white p-6 shadow-sm space-y-4">
         <h2 class="text-base font-semibold text-gray-800">Informations générales</h2>
@@ -206,15 +230,32 @@ const handleSave = async (status?: 'draft' | 'active') => {
             <p class="text-xs text-gray-500">Les identités des répondants ne seront pas enregistrées</p>
           </div>
         </label>
+
+        <div>
+          <label class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+            <CalendarX2 class="h-4 w-4 text-gray-400" />
+            Date de clôture automatique
+            <span class="ml-1 text-xs font-normal text-gray-400">(optionnel)</span>
+          </label>
+          <input
+            v-model="closesAt"
+            type="date"
+            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          />
+          <p class="mt-1 text-xs text-gray-400">Le sondage sera automatiquement fermé aux employés après cette date.</p>
+        </div>
       </div>
 
       <!-- QUESTIONS -->
       <div class="space-y-4">
         <div class="flex items-center justify-between">
-          <h2 class="text-base font-semibold text-gray-800">
+          <h2 class="text-base font-semibold text-gray-800 flex items-center gap-2">
             Questions
-            <span class="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-600">
+            <span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-600">
               {{ questions.length }}
+            </span>
+            <span v-if="questionsLocked" class="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+              <Lock class="h-3 w-3" /> Verrouillées
             </span>
           </h2>
         </div>
@@ -228,15 +269,20 @@ const handleSave = async (status?: 'draft' | 'active') => {
             <GripVertical class="h-4 w-4 text-gray-300" />
             <span class="text-sm font-semibold text-gray-600">Question {{ index + 1 }}</span>
             <div class="ml-auto flex items-center gap-2">
-              <label class="flex cursor-pointer items-center gap-1.5 text-xs text-gray-500">
+              <label
+                class="flex cursor-pointer items-center gap-1.5 text-xs text-gray-500"
+                :class="questionsLocked ? 'opacity-40 cursor-not-allowed' : ''"
+              >
                 <input
                   type="checkbox"
                   v-model="question.is_required"
+                  :disabled="questionsLocked"
                   class="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
                 />
                 Obligatoire
               </label>
               <button
+                v-if="!questionsLocked"
                 @click="removeQuestion(question.id)"
                 class="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 transition hover:bg-red-100 hover:text-red-500"
               >
@@ -250,13 +296,17 @@ const handleSave = async (status?: 'draft' | 'active') => {
               v-model="question.question_text"
               type="text"
               :placeholder="`Saisissez votre question ${index + 1}...`"
-              class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              :disabled="questionsLocked"
+              :class="questionsLocked ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'focus:border-blue-400 focus:ring-2 focus:ring-blue-100'"
+              class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium outline-none transition"
             />
 
             <select
               v-model="question.question_type"
               @change="onTypeChange(question)"
-              class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+              :disabled="questionsLocked"
+              :class="questionsLocked ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'focus:border-blue-400 focus:ring-2 focus:ring-blue-100'"
+              class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition bg-white"
             >
               <option v-for="(label, key) in questionTypeLabels" :key="key" :value="key">
                 {{ label }}
@@ -313,6 +363,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
         </div>
 
         <button
+          v-if="!questionsLocked"
           @click="addQuestion"
           class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 py-4 text-sm font-medium text-gray-500 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
         >

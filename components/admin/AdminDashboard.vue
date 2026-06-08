@@ -24,6 +24,7 @@ onMounted(async () => {
   await Promise.all([
     personnelStore.loadFromStorage(),
     surveyStore.loadFromStorage(),
+    surveyStore.loadAllResponses(),
     formationStore.loadFromStorage(),
     appConfigStore.loadFromStorage()
   ])
@@ -33,6 +34,7 @@ onMounted(async () => {
 const stats = computed(() => {
   const members = personnelStore.members
   const surveys = surveyStore.surveys
+  const responses = surveyStore.responses
   const formations = formationStore.formations
 
   const totalUsers = members.length
@@ -50,19 +52,10 @@ const stats = computed(() => {
   const ongoingFormations = formations.filter(f => f.status === 'en_cours').length
   const totalParticipants = formations.reduce((sum, f) => sum + f.participants, 0)
 
-  // Calcul du taux de participation moyen (simulé)
-  const avgParticipationRate = activeSurveys > 0
-    ? Math.round(45 + Math.random() * 35) // 45-80%
-    : 0
-
-  // Calcul du taux de satisfaction moyen (simulé)
-  const avgSatisfactionRate = closedSurveys > 0
-    ? Math.round(65 + Math.random() * 25) // 65-90%
-    : 0
-
-  // Taux de croissance (simulé)
-  const userGrowthRate = totalUsers > 5
-    ? Math.round((Math.random() * 15 - 3) * 10) / 10 // -3% to +12%
+  // Calcul du taux de participation réel basé sur les réponses
+  const submittedResponses = responses.filter(r => r.status === 'submitted').length
+  const avgParticipationRate = employeeCount > 0
+    ? Math.round((submittedResponses / employeeCount) * 100)
     : 0
 
   return {
@@ -79,8 +72,6 @@ const stats = computed(() => {
     ongoingFormations,
     totalParticipants,
     avgParticipationRate,
-    avgSatisfactionRate,
-    userGrowthRate,
     departmentCount: personnelStore.byDepartment.length
   }
 })
@@ -213,16 +204,7 @@ const activityColor = (type: 'survey' | 'personnel' | 'formation') => {
             <Users class="h-6 w-6 text-blue-600" />
           </div>
         </div>
-        <div class="mt-2 flex items-center gap-1 text-xs">
-          <span v-if="stats.userGrowthRate > 0" class="text-green-600 font-medium">
-            +{{ stats.userGrowthRate }}%
-          </span>
-          <span v-else-if="stats.userGrowthRate < 0" class="text-red-600 font-medium">
-            {{ stats.userGrowthRate }}%
-          </span>
-          <span v-else class="text-gray-500">Stable</span>
-          <span class="text-gray-400">ce mois</span>
-        </div>
+
       </div>
 
       <!-- Sondages actifs -->
@@ -268,9 +250,7 @@ const activityColor = (type: 'survey' | 'personnel' | 'formation') => {
             <TrendingUp class="h-6 w-6 text-amber-600" />
           </div>
         </div>
-        <div class="mt-2 text-xs text-gray-500">
-          Satisfaction: {{ stats.avgSatisfactionRate }}%
-        </div>
+
       </div>
     </div>
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Plus, Trash2, GripVertical, ChevronLeft, Save, Send } from 'lucide-vue-next'
+import { Plus, Trash2, GripVertical, ChevronLeft, Save, Send, CalendarX2 } from 'lucide-vue-next'
 import { useSurveyStore } from '~/stores/survey'
 import { useToast } from '~/composables/useToast'
 
@@ -12,6 +12,7 @@ const loading = ref(false)
 const title = ref('')
 const description = ref('')
 const isAnonymous = ref(false)
+const closesAt = ref('')
 
 interface Question {
   id: string
@@ -110,7 +111,8 @@ const handleSave = async (status: 'draft' | 'active') => {
       description: description.value.trim(),
       isAnonymous: isAnonymous.value,
       status,
-      questions: questions.value.map(q => ({ ...q }))
+      questions: questions.value.map(q => ({ ...q })),
+      ...(closesAt.value ? { closes_at: closesAt.value } : {})
     })
     toast.success(
       status === 'active' ? 'Sondage publié' : 'Brouillon enregistré',
@@ -179,6 +181,21 @@ const handleSave = async (status: 'draft' | 'active') => {
           <p class="text-xs text-gray-500">Les identités des répondants ne seront pas enregistrées</p>
         </div>
       </label>
+
+      <div>
+        <label class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+          <CalendarX2 class="h-4 w-4 text-gray-400" />
+          Date de clôture automatique
+          <span class="ml-1 text-xs font-normal text-gray-400">(optionnel)</span>
+        </label>
+        <input
+          v-model="closesAt"
+          type="date"
+          :min="new Date().toISOString().split('T')[0]"
+          class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+        />
+        <p class="mt-1 text-xs text-gray-400">Le sondage sera automatiquement fermé aux employés après cette date.</p>
+      </div>
     </div>
 
     <!-- QUESTIONS -->

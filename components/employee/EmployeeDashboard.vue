@@ -37,11 +37,12 @@ onMounted(async () => {
       formationStore.loadRegistrationsFromStorage()
     ])
 
-    // Get active surveys
-    surveys.value = surveyStore.activeSurveys
+    // Sondages filtrés par département de l'employé
+    const dept = currentUser.value?.department as string | undefined
+    surveys.value = surveyStore.getSurveysForDepartment(dept)
 
-    // Get available formations
-    formations.value = formationStore.availableFormations
+    // Formations filtrées par département de l'employé
+    formations.value = formationStore.getFormationsForDepartment(dept)
 
     // Get employee's registered formations
     if (currentUser.value?.id) {
@@ -212,34 +213,49 @@ const formatDate = (dateStr?: string) => {
           <div
             v-for="survey in surveys"
             :key="survey.id"
-            class="border rounded-lg p-4 hover:bg-accent transition flex items-center justify-between"
+            class="border rounded-lg p-4 transition flex items-center justify-between"
+            :class="surveyStore.isSurveyExpired(survey) ? 'bg-gray-50 opacity-75' : 'hover:bg-accent'"
           >
-            <div class="flex-1">
-              <h3 class="font-medium text-foreground">{{ survey.title }}</h3>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-medium text-foreground">{{ survey.title }}</h3>
+                <span
+                  v-if="surveyStore.isSurveyExpired(survey)"
+                  class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full"
+                >Clôturé</span>
+              </div>
               <p class="text-sm text-muted-foreground mt-1">{{ survey.description }}</p>
-              <div class="flex items-center gap-2 mt-2">
+              <div class="flex items-center gap-2 mt-2 flex-wrap">
                 <span
                   v-if="respondedSurveys.has(survey.id)"
                   class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded"
-                >
-                  ✓ Répondu
-                </span>
+                >✓ Répondu</span>
+                <span
+                  v-else-if="surveyStore.isSurveyExpired(survey)"
+                  class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded"
+                >Délai expiré</span>
                 <span v-else class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
                   En attente de réponse
+                </span>
+                <span
+                  v-if="survey.closes_at && !surveyStore.isSurveyExpired(survey)"
+                  class="text-xs text-amber-600"
+                >
+                  · Clôture le {{ formatDate(survey.closes_at) }}
                 </span>
               </div>
             </div>
             <button
               @click="goToSurvey(survey.id)"
-              :disabled="respondedSurveys.has(survey.id)"
-              class="ml-4 px-4 py-2 rounded-lg font-medium transition"
+              :disabled="respondedSurveys.has(survey.id) || surveyStore.isSurveyExpired(survey)"
+              class="ml-4 shrink-0 px-4 py-2 rounded-lg font-medium transition text-sm"
               :class="
-                respondedSurveys.has(survey.id)
+                respondedSurveys.has(survey.id) || surveyStore.isSurveyExpired(survey)
                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   : 'bg-primary text-primary-foreground hover:bg-primary/90'
               "
             >
-              {{ respondedSurveys.has(survey.id) ? 'Complété' : 'Répondre' }}
+              {{ respondedSurveys.has(survey.id) ? 'Complété' : surveyStore.isSurveyExpired(survey) ? 'Clôturé' : 'Répondre' }}
             </button>
           </div>
         </div>

@@ -6,6 +6,7 @@ import {
 } from 'lucide-vue-next'
 import { useSurveyStore } from '~/stores/survey'
 import { useFormationStore } from '~/stores/formation'
+import { usePersonnelStore } from '~/stores/personnel'
 import ParticipationChart from '@/components/grh/ParticipationChart.vue'
 import SatisfactionChart from '@/components/grh/SatisfactionChart.vue'
 import TrainingNeedsCard from '@/components/grh/TrainingCard.vue'
@@ -14,22 +15,18 @@ import RecentSurveys from '@/components/grh/RecentSurveys.vue'
 
 const surveyStore = useSurveyStore()
 const formationStore = useFormationStore()
+const personnelStore = usePersonnelStore()
 
 onMounted(async () => {
   await Promise.all([
+    personnelStore.loadFromStorage(),
     surveyStore.loadFromStorage(),
+    surveyStore.loadAllResponses(),
     formationStore.loadFromStorage()
   ])
 })
 
 // ── Analytics helpers ──────────────────────────────────────────────────────
-
-/**
- * Deterministic seed per department name (0–39).
- * Keeps participation rates stable across refreshes without a backend.
- */
-const deptSeed = (name: string) =>
-  name.split('').reduce((h, c, i) => (h + c.charCodeAt(0) * (i + 1)) % 40, 0)
 
 /** Map: department → survey stats derived from sent_to fields */
 const deptSurveyMap = computed(() => {
@@ -45,17 +42,35 @@ const deptSurveyMap = computed(() => {
   return m
 })
 
-/** Participation rates per department, sorted descending */
-const departmentParticipation = computed(() =>
-  Object.entries(deptSurveyMap.value)
-    .map(([name, d]) => ({
-      name,
-      rate: Math.min(97, 52 + d.total * 13 + deptSeed(name)),
-      surveysCount: d.total,
-      activeCount: d.active
-    }))
-    .sort((a, b) => b.rate - a.rate)
-)
+/** Participation rates per department based on actual responses, sorted descending */
+const departmentParticipation = computed(() => {
+  const departments = new Set(surveyStore.surveys.flatMap(s => s.sent_to))
+  const result: { name: string; rate: number; surveysCount: number; activeCount: number; responseCount: number; employeeCount: number }[] = []
+
+  for (const dept of departments) {
+    const deptSurveys = deptSurveyMap.value[dept]
+    const deptEmployees = personnelStore.members.filter(m => m.department === dept && m.role === 'employee')
+    const deptResponses = surveyStore.responses.filter(r => {
+      const employee = personnelStore.members.find(e => e.id === r.employee_id)
+      return employee?.department === dept && r.status === 'submitted'
+    })
+
+    const rate = deptEmployees.length > 0
+      ? Math.round((deptResponses.length / deptEmployees.length) * 100)
+      : 0
+
+    result.push({
+      name: dept,
+      rate,
+      surveysCount: deptSurveys?.total || 0,
+      activeCount: deptSurveys?.active || 0,
+      responseCount: deptResponses.length,
+      employeeCount: deptEmployees.length
+    })
+  }
+
+  return result.sort((a, b) => b.rate - a.rate)
+})
 
 /** Survey status synthesis */
 const surveySynthesis = computed(() => {

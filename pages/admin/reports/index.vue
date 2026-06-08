@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   FileText,
   GraduationCap,
   TrendingUp,
   Users,
   Download,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight,
   Clock,
-  CheckCircle2
+  CheckCircle2,
+  BarChart3
 } from 'lucide-vue-next'
 import { useSurveyStore } from '~/stores/survey'
 import { useFormationStore } from '~/stores/formation'
@@ -22,12 +20,34 @@ const formationStore = useFormationStore()
 const personnelStore = usePersonnelStore()
 const toast = useToast()
 
+const surveyResponseCounts = ref<Record<string, number>>({})
+const loadingResponses = ref(false)
+
 onMounted(async () => {
   await Promise.all([
     surveyStore.loadFromStorage(),
     formationStore.loadFromStorage(),
     personnelStore.loadFromStorage()
   ])
+  loadingResponses.value = true
+  try {
+    const surveysToFetch = surveyStore.surveys.filter(s => s.status !== 'draft')
+    const results = await Promise.allSettled(
+      surveysToFetch.map(s => surveyStore.getSurveyResponses(s.id))
+    )
+    const counts: Record<string, number> = {}
+    surveysToFetch.forEach((survey, i) => {
+      const result = results[i]
+      counts[survey.id] = result.status === 'fulfilled'
+        ? result.value.filter((r: any) => r.status === 'submitted').length
+        : 0
+    })
+    surveyResponseCounts.value = counts
+  } catch (e) {
+    console.error('Erreur chargement réponses:', e)
+  } finally {
+    loadingResponses.value = false
+  }
 })
 
 // ── Synthèse Sondages ──────────────────────────────────────────────────────
@@ -37,13 +57,9 @@ const surveyStats = computed(() => {
   const draft = surveys.filter(s => s.status === 'draft')
   const closed = surveys.filter(s => s.status === 'closed')
 
-  // Simulation des taux de réponse
-  const totalResponses = active.length * 12 + closed.length * 25
-  const avgResponseRate = active.length > 0
-    ? Math.round(45 + Math.random() * 40)
-    : 0
+  const totalResponses = Object.values(surveyResponseCounts.value).reduce((sum, n) => sum + n, 0)
+  const surveysWithResponses = surveys.filter(s => (surveyResponseCounts.value[s.id] || 0) > 0).length
 
-  // Département le plus actif
   const deptActivity = personnelStore.byDepartment.slice(0, 3)
 
   return {
@@ -52,7 +68,7 @@ const surveyStats = computed(() => {
     draft: draft.length,
     closed: closed.length,
     totalResponses,
-    avgResponseRate,
+    surveysWithResponses,
     topDepartments: deptActivity
   }
 })
@@ -65,8 +81,8 @@ const formationStats = computed(() => {
   const terminee = formations.filter(f => f.status === 'terminée')
 
   const totalParticipants = formations.reduce((sum, f) => sum + f.participants, 0)
-  const avgCompletionRate = terminee.length > 0
-    ? Math.round(70 + Math.random() * 25)
+  const avgCompletionRate = formations.length > 0
+    ? Math.round((terminee.length / formations.length) * 100)
     : 0
 
   // Catégories les plus populaires
@@ -92,19 +108,15 @@ const formationStats = computed(() => {
 // ── KPIs globales ──────────────────────────────────────────────────────────
 const globalKPIs = computed(() => {
   const totalEmployees = personnelStore.members.filter(m => m.status === 'actif').length
-  const surveyParticipation = surveyStats.value.avgResponseRate
+  const totalResponses = surveyStats.value.totalResponses
+  const totalParticipants = formationStats.value.totalParticipants
   const formationCompletion = formationStats.value.avgCompletionRate
-
-  // Score global d'engagement (0-100)
-  const engagementScore = Math.round(
-    (surveyParticipation * 0.4 + formationCompletion * 0.3 + Math.min(100, totalEmployees / 2) * 0.3)
-  )
 
   return {
     totalEmployees,
-    surveyParticipation,
-    formationCompletion,
-    engagementScore
+    totalResponses,
+    totalParticipants,
+    formationCompletion
   }
 })
 
@@ -145,13 +157,32 @@ const downloadBlob = (blob: Blob, filename: string) => {
   URL.revokeObjectURL(url)
 }
 
+// const buildReportSummary = () => {
+//   return [
+//     ['Statistique', 'Valeur'],
+//     [‘Employés actifs’, globalKPIs.value.totalEmployees],
+//     [‘Réponses soumises (sondages)’, globalKPIs.value.totalResponses],
+//     [‘Formations terminées’, `${globalKPIs.value.formationCompletion}%`],
+//     [‘Total participants formations’, globalKPIs.value.totalParticipants],
+//     ['Total sondages', surveyStats.value.total],
+//     ['Sondages actifs', surveyStats.value.active],
+//     ['Sondages brouillons', surveyStats.value.draft],
+//     ['Sondages terminés', surveyStats.value.closed],
+//     ['Total formations', formationStats.value.total],
+//     ['Formations disponibles', formationStats.value.disponible],
+//     ['Formations en cours', formationStats.value.enCours],
+//     ['Formations terminées', formationStats.value.terminee]
+//   ]
+// }
+
+
 const buildReportSummary = () => {
   return [
     ['Statistique', 'Valeur'],
     ['Employés actifs', globalKPIs.value.totalEmployees],
-    ['Participation sondages', `${globalKPIs.value.surveyParticipation}%`],
-    ['Taux de complétion formations', `${globalKPIs.value.formationCompletion}%`],
-    ['Score d’engagement', `${globalKPIs.value.engagementScore}/100`],
+    ['Réponses soumises (sondages)', globalKPIs.value.totalResponses],
+    ['Formations terminées', `${globalKPIs.value.formationCompletion}%`],
+    ['Total participants formations', globalKPIs.value.totalParticipants],
     ['Total sondages', surveyStats.value.total],
     ['Sondages actifs', surveyStats.value.active],
     ['Sondages brouillons', surveyStats.value.draft],
@@ -162,6 +193,7 @@ const buildReportSummary = () => {
     ['Formations terminées', formationStats.value.terminee]
   ]
 }
+
 
 const exportExcelReport = async () => {
   if (!import.meta.client) return
@@ -363,56 +395,54 @@ const statusColor = (status: string) => {
       <div class="rounded-xl border bg-white p-4 shadow-sm">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-500">Participation sondages</p>
-            <p class="text-3xl font-bold text-green-600 mt-1">{{ globalKPIs.surveyParticipation }}%</p>
+            <p class="text-sm text-gray-500">Réponses soumises</p>
+            <p class="text-3xl font-bold text-green-600 mt-1">
+              <span v-if="loadingResponses" class="text-lg text-gray-400">…</span>
+              <span v-else>{{ globalKPIs.totalResponses }}</span>
+            </p>
           </div>
           <div class="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center">
             <TrendingUp class="h-6 w-6 text-green-600" />
           </div>
         </div>
-        <div class="mt-2 flex items-center gap-1 text-xs">
-          <ArrowUpRight class="h-3 w-3 text-green-500" />
-          <span class="text-green-600 font-medium">+5%</span>
-          <span class="text-gray-400">vs mois dernier</span>
+        <div class="mt-2 text-xs text-gray-400">
+          {{ surveyStats.surveysWithResponses }} sondage(s) avec réponses
         </div>
       </div>
 
       <div class="rounded-xl border bg-white p-4 shadow-sm">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-500">Taux de complétion</p>
+            <p class="text-sm text-gray-500">Formations terminées</p>
             <p class="text-3xl font-bold text-purple-600 mt-1">{{ globalKPIs.formationCompletion }}%</p>
           </div>
           <div class="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center">
             <GraduationCap class="h-6 w-6 text-purple-600" />
           </div>
         </div>
-        <div class="mt-2 flex items-center gap-1 text-xs">
-          <ArrowUpRight class="h-3 w-3 text-green-500" />
-          <span class="text-green-600 font-medium">+8%</span>
-          <span class="text-gray-400">vs mois dernier</span>
+        <div class="mt-2 text-xs text-gray-400">
+          {{ formationStats.terminee }} / {{ formationStats.total }} formations
         </div>
       </div>
 
       <div class="rounded-xl border bg-white p-4 shadow-sm">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-500">Score d'engagement</p>
-            <p class="text-3xl font-bold text-amber-600 mt-1">{{ globalKPIs.engagementScore }}/100</p>
+            <p class="text-sm text-gray-500">Participants formations</p>
+            <p class="text-3xl font-bold text-amber-600 mt-1">{{ globalKPIs.totalParticipants }}</p>
           </div>
           <div class="h-12 w-12 rounded-lg bg-amber-100 flex items-center justify-center">
             <CheckCircle2 class="h-6 w-6 text-amber-600" />
           </div>
         </div>
         <div class="mt-2 text-xs text-gray-400">
-          {{ globalKPIs.engagementScore >= 70 ? 'Excellent' : globalKPIs.engagementScore >= 50 ? 'Bon' : 'À améliorer' }}
+          Toutes formations confondues
         </div>
       </div>
     </div>
 
-    <!-- SYNTHÈSE SONDAges ───────────────────────────────────────────────── -->
-    <div class="grid gap-6 lg:grid-cols-3">
-      <div class="lg:col-span-2 rounded-xl border bg-white shadow-sm overflow-hidden">
+    <!-- SYNTHÈSE SONDAGES ───────────────────────────────────────────────── -->
+    <div class="rounded-xl border bg-white shadow-sm overflow-hidden">
         <div class="flex items-center justify-between border-b px-6 py-4">
           <div class="flex items-center gap-3">
             <div class="h-10 w-10 rounded-lg bg-green-100 flex items-center justify-center">
@@ -453,10 +483,16 @@ const statusColor = (status: string) => {
             </div>
             <div class="p-4 border rounded-lg">
               <div class="flex items-center gap-2 mb-2">
-                <TrendingUp class="h-4 w-4 text-gray-400" />
-                <span class="text-sm text-gray-500">Taux de réponse moyen</span>
+                <BarChart3 class="h-4 w-4 text-gray-400" />
+                <span class="text-sm text-gray-500">Sondages avec réponses</span>
               </div>
-              <p class="text-3xl font-bold text-green-600">{{ surveyStats.avgResponseRate }}%</p>
+              <p class="text-3xl font-bold text-green-600">
+                <span v-if="loadingResponses" class="text-lg text-gray-400">…</span>
+                <span v-else>{{ surveyStats.surveysWithResponses }}</span>
+              </p>
+              <p v-if="!loadingResponses" class="text-xs text-gray-400 mt-1">
+                sur {{ surveyStats.total }} sondage(s)
+              </p>
             </div>
           </div>
 
@@ -482,32 +518,58 @@ const statusColor = (status: string) => {
         </div>
       </div>
 
-      <!-- Liste sondages récents -->
-      <div class="rounded-xl border bg-white shadow-sm overflow-hidden">
-        <div class="border-b px-6 py-4">
-          <h2 class="font-semibold text-gray-900">Sondages récents</h2>
+
+    <!-- LISTE COMPLÈTE DES SONDAGES ──────────────────────────────────────── -->
+    <div class="rounded-xl border bg-white shadow-sm overflow-hidden">
+      <div class="flex items-center justify-between border-b px-6 py-4">
+        <div>
+          <h2 class="font-semibold text-gray-900">Tous les sondages</h2>
+          <p class="text-xs text-gray-500 mt-0.5">
+            Cliquez sur "Résultats" pour accéder aux statistiques détaillées de chaque sondage
+          </p>
         </div>
-        <div class="divide-y">
-          <div
-            v-for="survey in surveyStore.surveys.slice(0, 5)"
-            :key="survey.id"
-            class="p-4 hover:bg-gray-50 transition"
-          >
-            <div class="flex items-start justify-between gap-2">
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-900 truncate">{{ survey.title }}</p>
-                <p class="text-xs text-gray-500 mt-1">{{ formatDate(survey.created_at) }}</p>
-              </div>
-              <span
-                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                :class="statusColor(survey.status)"
-              >
-                {{ survey.status === 'active' ? 'En cours' : survey.status === 'draft' ? 'Brouillon' : 'Terminé' }}
-              </span>
-            </div>
+        <span v-if="loadingResponses" class="text-xs text-gray-400 animate-pulse">Chargement des réponses…</span>
+      </div>
+
+      <div v-if="surveyStore.surveys.filter(s => s.status !== 'draft').length === 0" class="flex flex-col items-center justify-center py-14 text-center">
+        <FileText class="h-10 w-10 text-gray-200" />
+        <p class="mt-3 text-sm text-gray-500">Aucun sondage publié pour le moment</p>
+      </div>
+
+      <div v-else class="divide-y">
+        <div
+          v-for="survey in surveyStore.surveys.filter(s => s.status !== 'draft')"
+          :key="survey.id"
+          class="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition"
+        >
+          <!-- Infos -->
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">{{ survey.title }}</p>
+            <p class="mt-0.5 text-xs text-gray-400">Créé le {{ formatDate(survey.created_at) }}</p>
           </div>
-          <div v-if="surveyStore.surveys.length === 0" class="p-8 text-center text-gray-500 text-sm">
-            Aucun sondage pour le moment
+
+          <!-- Réponses réelles -->
+          <div class="shrink-0 text-right w-20">
+            <p v-if="loadingResponses" class="text-base font-bold text-gray-300">…</p>
+            <p v-else class="text-base font-bold text-gray-900">{{ surveyResponseCounts[survey.id] ?? 0 }}</p>
+            <p class="text-xs text-gray-400">réponse(s)</p>
+          </div>
+
+          <!-- Statut + lien résultats -->
+          <div class="shrink-0 flex items-center gap-2">
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+              :class="statusColor(survey.status)"
+            >
+              {{ survey.status === 'active' ? 'En cours' : 'Terminé' }}
+            </span>
+            <NuxtLink
+              :to="`/grh/surveys/${survey.id}/stats`"
+              class="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-purple-700"
+            >
+              <BarChart3 class="h-3.5 w-3.5" />
+              Résultats
+            </NuxtLink>
           </div>
         </div>
       </div>

@@ -17,6 +17,7 @@ export interface Survey {
   questions: SurveyQuestion[]
   created_at: string
   sent_to: string[]
+  closes_at?: string
 }
 
 export interface SurveyResponse {
@@ -39,59 +40,42 @@ export const useSurveyStore = defineStore('survey', () => {
     return token ? { Authorization: `Bearer ${token}` } : {}
   }
 
-  // const api = (path: string, opts: Record<string, any> = {}) =>
-  //   $fetch<any>(`${config.public.apiBase}${path}`, { headers: headers(), ...opts })
-
   const api = async (path: string, opts: Record<string, any> = {}) => {
-  try {
-    return await $fetch<any>(`${config.public.apiBase}${path}`, {
-      headers: headers(),
-      ...opts
-    })
-  } catch (error: any) {
-    console.error("❌ API ERROR:", {
-      url: path,
-      status: error?.response?.status,
-      message: error?.message,
-      data: error?.response?._data
-    })
-
-    throw error
+    try {
+      return await $fetch<any>(`${config.public.apiBase}${path}`, {
+        headers: headers(),
+        ...opts
+      })
+    } catch (error: any) {
+      console.error('❌ API ERROR:', {
+        url: path,
+        status: error?.response?.status,
+        message: error?.message,
+        data: error?.response?._data
+      })
+      throw error
+    }
   }
-}
 
-  // ── Load surveys from API ───────────────────────────────────────────────────
-  // const loadFromStorage = async () => {
-  //   if (!import.meta.client) return
-  //   loading.value = true
-  //   try {
-  //     const res = await api('/surveys')
-  //     surveys.value = res.data as Survey[]
-  //   } catch (e) {
-  //     console.error('Erreur chargement sondages:', e)
-  //   } finally {
-  //     loading.value = false
-  //   }
-  // }
-
-
-const loadFromStorage = async () => {
-  if (!import.meta.client) return
-
-  loading.value = true
-
-  try {
-    const res = await api('/surveys')
-
-    surveys.value = res.data ?? res
-
-  } catch (e) {
-    console.error('❌ Erreur chargement sondages:', e)
-  } finally {
-    loading.value = false
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  const isSurveyExpired = (survey: Survey): boolean => {
+    if (!survey.closes_at) return false
+    return new Date(survey.closes_at) < new Date()
   }
-}
 
+  // ── Load ────────────────────────────────────────────────────────────────────
+  const loadFromStorage = async () => {
+    if (!import.meta.client) return
+    loading.value = true
+    try {
+      const res = await api('/surveys')
+      surveys.value = res.data ?? res
+    } catch (e) {
+      console.error('❌ Erreur chargement sondages:', e)
+    } finally {
+      loading.value = false
+    }
+  }
 
   const loadResponsesFromStorage = async () => {
     if (!import.meta.client) return
@@ -103,7 +87,17 @@ const loadFromStorage = async () => {
     }
   }
 
-  // ── CRUD surveys ────────────────────────────────────────────────────────────
+  const loadAllResponses = async () => {
+    if (!import.meta.client) return
+    try {
+      const res = await api('/surveys/responses')
+      responses.value = res.data as SurveyResponse[]
+    } catch (e) {
+      console.error('Erreur chargement toutes les réponses:', e)
+    }
+  }
+
+  // ── CRUD ────────────────────────────────────────────────────────────────────
   const createSurvey = async (data: Omit<Survey, 'id' | 'created_at' | 'sent_to'>) => {
     const res = await api('/surveys', { method: 'POST', body: data })
     const survey = res.data as Survey
@@ -132,8 +126,17 @@ const loadFromStorage = async () => {
 
   const getSurveyById = (id: string) => surveys.value.find(s => s.id === id) || null
 
-  // ── Responses ───────────────────────────────────────────────────────────────
+  // ── Réponses ─────────────────────────────────────────────────────────────────
+  const getSurveyResponses = async (survey_id: string): Promise<SurveyResponse[]> => {
+    const res = await api(`/surveys/${survey_id}/responses`)
+    return (res.data ?? res) as SurveyResponse[]
+  }
+
   const submitResponse = async (survey_id: string, employee_id: string, answers: Record<string, any>) => {
+    const survey = surveys.value.find(s => s.id === survey_id)
+    if (survey && isSurveyExpired(survey)) {
+      throw new Error('Ce sondage est clôturé, les réponses ne sont plus acceptées.')
+    }
     const res = await api(`/surveys/${survey_id}/responses`, {
       method: 'POST',
       body: { answers, status: 'submitted' }
@@ -161,9 +164,19 @@ const loadFromStorage = async () => {
   const hasEmployeeResponded = (survey_id: string, employee_id: string) =>
     responses.value.some(r => r.survey_id === survey_id && r.employee_id === employee_id && r.status === 'submitted')
 
-  // Returns active surveys — visible to all employees regardless of their ID
-  const getEmployeeSurveys = () =>
-    surveys.value.filter(s => s.status === 'active')
+  // Sondages visibles par un employé selon son département
+  const getSurveysForDepartment = (department?: string): Survey[] => {
+    return surveys.value.filter(s => {
+      if (s.status !== 'active') return false
+      if (isSurveyExpired(s)) return false
+      // Sondage non encore envoyé → visible par tous les actifs
+      if (!s.sent_to || s.sent_to.length === 0) return true
+      if (!department) return false
+      return s.sent_to.includes(department) || s.sent_to.includes('Tous les départements')
+    })
+  }
+
+  const getEmployeeSurveys = () => surveys.value.filter(s => s.status === 'active')
 
   const getEmployeeResponses = (employee_id: string) =>
     responses.value.filter(r => r.employee_id === employee_id)
@@ -195,17 +208,24 @@ const loadFromStorage = async () => {
     return false
   }
 
-  const activeSurveys = computed(() => surveys.value.filter(s => s.status === 'active'))
+  // ── Computed ─────────────────────────────────────────────────────────────────
+  const activeSurveys = computed(() =>
+    surveys.value.filter(s => s.status === 'active' && !isSurveyExpired(s))
+  )
   const draftSurveys  = computed(() => surveys.value.filter(s => s.status === 'draft'))
-  const closedSurveys = computed(() => surveys.value.filter(s => s.status === 'closed'))
+  const closedSurveys = computed(() =>
+    surveys.value.filter(s => s.status === 'closed' || isSurveyExpired(s))
+  )
 
   return {
     surveys, responses, loading,
     activeSurveys, draftSurveys, closedSurveys,
-    loadFromStorage, loadResponsesFromStorage,
+    isSurveyExpired,
+    loadFromStorage, loadResponsesFromStorage, loadAllResponses,
     createSurvey, updateSurvey, deleteSurvey, sendSurvey, getSurveyById,
+    getSurveyResponses,
     submitResponse, saveResponseDraft, getResponseByEmployeeAndSurvey,
-    hasEmployeeResponded, getEmployeeSurveys,
+    hasEmployeeResponded, getEmployeeSurveys, getSurveysForDepartment,
     getEmployeeResponses, getEmployeeSubmittedResponses, getEmployeeDraftResponses,
     getSurveyWithResponse, submitDraftResponse
   }

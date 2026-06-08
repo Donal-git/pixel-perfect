@@ -10,7 +10,9 @@ import {
   ClipboardList,
   Clock,
   Archive,
-  Users
+  Users,
+  BarChart3,
+  CalendarX2
 } from 'lucide-vue-next'
 import { useSurveyStore } from '~/stores/survey'
 import { useToast } from '~/composables/useToast'
@@ -135,8 +137,12 @@ const statusConfig = {
   closed: { label: 'Fermé', class: 'bg-gray-100 text-gray-500 border border-gray-200' }
 }
 
-const formatDate = (dateStr: string) =>
-  new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+const formatDate = (dateStr?: string) => {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
 </script>
 
 <template>
@@ -256,9 +262,11 @@ const formatDate = (dateStr: string) =>
               <p class="truncate text-sm font-semibold text-gray-900">{{ survey.title }}</p>
               <span
                 class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="statusConfig[survey.status]?.class"
+                :class="isSurveyExpired(survey) && survey.status === 'active'
+                  ? 'bg-gray-100 text-gray-500'
+                  : statusConfig[survey.status]?.class"
               >
-                {{ statusConfig[survey.status]?.label }}
+                {{ isSurveyExpired(survey) && survey.status === 'active' ? 'Clôturé' : statusConfig[survey.status]?.label }}
               </span>
             </div>
             <p class="mt-0.5 truncate text-xs text-gray-500">{{ survey.description || 'Aucune description' }}</p>
@@ -271,15 +279,34 @@ const formatDate = (dateStr: string) =>
                 <ClipboardList class="h-3 w-3" />
                 {{ survey.questions.length }} question{{ survey.questions.length > 1 ? 's' : '' }}
               </span>
-              <span v-if="survey.sent_to.length > 0" class="flex items-center gap-1 text-blue-500">
+              <span v-if="survey.sent_to?.length > 0" class="flex items-center gap-1 text-blue-500">
                 <Users class="h-3 w-3" />
                 {{ survey.sent_to.join(', ') }}
+              </span>
+              <!-- Date de clôture -->
+              <span
+                v-if="survey.closes_at"
+                class="flex items-center gap-1"
+                :class="isSurveyExpired(survey) ? 'text-red-500' : 'text-amber-500'"
+              >
+                <CalendarX2 class="h-3 w-3" />
+                {{ isSurveyExpired(survey) ? 'Clôturé le' : 'Clôture le' }} {{ formatDate(survey.closes_at) }}
               </span>
             </div>
           </div>
 
           <!-- Actions -->
           <div class="flex shrink-0 items-center gap-2">
+            <!-- Stats (sondages actifs ou fermés avec des réponses potentielles) -->
+            <NuxtLink
+              v-if="survey.status !== 'draft'"
+              :to="`/grh/surveys/${survey.id}/stats`"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 transition hover:bg-purple-100"
+            >
+              <BarChart3 class="h-3.5 w-3.5" />
+              Résultats
+            </NuxtLink>
+
             <NuxtLink
               :to="`/grh/surveys/${survey.id}/edit`"
               class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
@@ -289,6 +316,7 @@ const formatDate = (dateStr: string) =>
             </NuxtLink>
 
             <button
+              v-if="!isSurveyExpired(survey)"
               @click="openSendModal(survey.id)"
               class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blue-700"
             >
