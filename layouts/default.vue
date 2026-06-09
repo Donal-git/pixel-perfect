@@ -8,6 +8,7 @@ import {
   Settings,
   Bell,
   FileText,
+  UserPlus,
 } from 'lucide-vue-next'
 import type { FunctionalComponent } from 'vue'
 import { useAuthStore } from '~/stores/auth'
@@ -23,6 +24,7 @@ const navByRole: Record<Role, NavItem[]> = {
   admin: [
     { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
     { label: "Personnel", href: "/personnel", icon: Users },
+    { label: "Demandes", href: "/admin/registration-requests", icon: UserPlus },
     { label: "Rapports", href: "/admin/reports", icon: FileText },
     { label: "Paramètres", href: "/admin/settings", icon: Settings },
   ],

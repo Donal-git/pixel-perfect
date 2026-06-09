@@ -87,10 +87,17 @@ export const useSurveyStore = defineStore('survey', () => {
     }
   }
 
-  const loadAllResponses = async () => {
+  const loadAllResponses = async (params?: {
+    survey_id?: string
+    status?: 'draft' | 'submitted'
+  }) => {
     if (!import.meta.client) return
     try {
-      const res = await api('/surveys/responses')
+      const qs = new URLSearchParams()
+      if (params?.survey_id) qs.set('survey_id', params.survey_id)
+      if (params?.status)    qs.set('status', params.status)
+      const query = qs.toString() ? `?${qs.toString()}` : ''
+      const res = await api(`/surveys/responses${query}`)
       responses.value = res.data as SurveyResponse[]
     } catch (e) {
       console.error('Erreur chargement toutes les réponses:', e)

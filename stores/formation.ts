@@ -55,9 +55,18 @@ export const useFormationStore = defineStore('formation', () => {
   const loadRegistrationsFromStorage = async () => {
     if (!import.meta.client) return
     try {
+      const res = await api('/formation/my')
+      const myFormations = res.data as Formation[]
+      registrations.value = myFormations.map(f => ({
+        id: `reg-${f.id}`,
+        formation_id: f.id,
+        employee_id: '',
+        registered_at: f.created_at,
+        status: 'inscrit' as const
+      }))
+    } catch {
+      // Endpoint non disponible pour ce rôle (admin/grh) — registrations vides
       registrations.value = []
-    } catch (e) {
-      console.error('Erreur chargement inscriptions:', e)
     }
   }
 

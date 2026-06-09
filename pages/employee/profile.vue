@@ -1,25 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useAuthStore } from '~/stores/auth'
-import { usePersonnelStore } from '~/stores/personnel'
+import { useToast } from '~/composables/useToast'
 import { useRouter } from 'vue-router'
 
-// 🧭 Navigation
 const router = useRouter()
-
-// 📦 Stores
 const authStore = useAuthStore()
-const personnelStore = usePersonnelStore()
+const toast = useToast()
+const config = useRuntimeConfig()
 
-// 👤 Current user
 const currentUser = computed(() => authStore.user)
 
-// 📊 State
 const loading = ref(true)
 const saving = ref(false)
 const profileData = ref<any>(null)
 
-// 📝 Form data
 const form = ref({
   name: '',
   email: '',
@@ -28,71 +23,95 @@ const form = ref({
   position: ''
 })
 
-// 🔄 Load profile data
+const authHeaders = (): Record<string, string> => {
+  const token = import.meta.client ? localStorage.getItem('auth_token') : null
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 onMounted(async () => {
   loading.value = true
   try {
-    // Load personnel store
-    await personnelStore.loadFromStorage()
-
-    // Get current user's profile from personnel store, fallback to auth user
     const userId = currentUser.value?.id
-    let profile = userId ? personnelStore.getPersonnelById(userId) : null
+    if (!userId) return
 
-    if (!profile && currentUser.value) {
-      profile = {
-        id: currentUser.value.id,
-        name: currentUser.value.name ?? '',
-        email: currentUser.value.email ?? '',
-        role: currentUser.value.role ?? 'employee',
-        department: currentUser.value.department ?? '',
-        position: currentUser.value.position ?? '',
-        phone: currentUser.value.phone ?? '',
-        status: currentUser.value.status ?? 'actif',
-        registeredAt: currentUser.value.registeredAt ?? ''
-      }
+    // Fetch only own profile (not all users — avoids 403 for employee role)
+    const res = await $fetch<any>(`${config.public.apiBase}/users/${userId}`, {
+      headers: authHeaders()
+    })
+    const raw = res.data ?? res
+
+    profileData.value = {
+      id:           raw.id ?? raw._id,
+      name:         raw.name ?? raw.username ?? '',
+      email:        raw.email ?? '',
+      role:         raw.role ?? raw.accountType ?? 'employee',
+      department:   raw.department ?? '',
+      position:     raw.position ?? '',
+      phone:        raw.phone ?? '',
+      status:       raw.status ?? 'actif',
+      registeredAt: raw.registeredAt ?? raw.createdAt ?? raw.created_at ?? ''
     }
-
-    if (profile) {
-      profileData.value = profile
-      form.value = {
-        name: profile.name,
-        email: profile.email,
-        phone: profile.phone,
-        department: profile.department,
-        position: profile.position
-      }
+    form.value = {
+      name:       profileData.value.name,
+      email:      profileData.value.email,
+      phone:      profileData.value.phone,
+      department: profileData.value.department,
+      position:   profileData.value.position
     }
   } catch (error) {
     console.error('Error loading profile:', error)
+    // Fallback to cached auth store data
+    if (currentUser.value) {
+      profileData.value = {
+        id:           currentUser.value.id,
+        name:         currentUser.value.name ?? '',
+        email:        currentUser.value.email ?? '',
+        role:         currentUser.value.accountType ?? 'employee',
+        department:   '',
+        position:     '',
+        phone:        '',
+        status:       'actif',
+        registeredAt: ''
+      }
+      form.value = {
+        name:       profileData.value.name,
+        email:      profileData.value.email,
+        phone:      '',
+        department: '',
+        position:   ''
+      }
+    }
   } finally {
     loading.value = false
   }
 })
 
-// 💾 Save profile
 const handleSave = async () => {
   saving.value = true
   try {
-    if (currentUser.value?.id && profileData.value) {
-      await personnelStore.updateMember(currentUser.value.id, {
-        name: form.value.name,
-        email: form.value.email,
-        phone: form.value.phone
+    if (currentUser.value?.id) {
+      await $fetch<any>(`${config.public.apiBase}/users/${currentUser.value.id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: {
+          name:  form.value.name,
+          email: form.value.email,
+          phone: form.value.phone
+        }
       })
 
       if (authStore.user) {
-        authStore.user.name = form.value.name
+        authStore.user.name  = form.value.name
         authStore.user.email = form.value.email
         if (import.meta.client) {
           localStorage.setItem('auth_user', JSON.stringify(authStore.user))
         }
       }
     }
-    alert('✓ Profil mis à jour avec succès')
+    toast.success('Profil mis à jour', 'Vos informations ont été enregistrées.')
   } catch (error: any) {
     console.error('Error saving profile:', error)
-    alert('✗ ' + (error?.data?.message || 'Erreur lors de la mise à jour du profil'))
+    toast.error('Erreur', error?.data?.message || 'Impossible de mettre à jour le profil')
   } finally {
     saving.value = false
   }
@@ -123,17 +142,13 @@ const passwordForm = ref({
 
 const handlePasswordChange = async () => {
   if (passwordForm.value.newPassword !== passwordForm.value.confirmPassword) {
-    alert('Les mots de passe ne correspondent pas')
+    toast.error('Erreur', 'Les mots de passe ne correspondent pas')
     return
   }
 
-  alert('✓ Mot de passe modifié avec succès (simulation)')
+  toast.success('Info', 'Le changement de mot de passe sera disponible prochainement.')
   showPasswordForm.value = false
-  passwordForm.value = {
-    oldPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  }
+  passwordForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
 }
 </script>
 
@@ -377,7 +392,7 @@ const handlePasswordChange = async () => {
             📋 Retour au tableau de bord
           </router-link>
           <router-link
-            to="/surveys"
+            to="/employee/surveys"
             class="px-4 py-3 border rounded-lg hover:bg-accent transition flex items-center gap-2 font-medium"
           >
             📝 Sondages

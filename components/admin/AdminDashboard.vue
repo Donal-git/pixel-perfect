@@ -24,7 +24,7 @@ onMounted(async () => {
   await Promise.all([
     personnelStore.loadFromStorage(),
     surveyStore.loadFromStorage(),
-    surveyStore.loadAllResponses(),
+    surveyStore.loadAllResponses({ status: 'submitted' }),
     formationStore.loadFromStorage(),
     appConfigStore.loadFromStorage()
   ])

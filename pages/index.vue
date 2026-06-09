@@ -1,51 +1,32 @@
 
 <script setup lang="ts">
-const user = ref(null)
-const role = ref('')
-const loading = ref(true)
+import { useAuthStore } from '~/stores/auth'
+
+const authStore = useAuthStore()
 
 onMounted(async () => {
-  // Exemple fake (à remplacer par Pinia / Supabase / API)
-  user.value = { id: 1 }
-  role.value = 'admin' // admin | grh | employee
-
-  loading.value = false
+  await authStore.fetchUser()
 })
 
 watchEffect(() => {
-  // pas connecté → login
-  if (!loading.value && !user.value) {
-    navigateTo('/auth')
+  if (authStore.loading) return
+
+  if (!authStore.user) {
+    navigateTo('/auth/login')
     return
   }
 
-  // connecté → redirection selon rôle
-  if (!loading.value && user.value) {
-    switch (role.value) {
-      case 'admin':
-        navigateTo('/admin')
-        break
-
-      case 'grh':
-        navigateTo('/grh')
-        break
-
-      case 'employee':
-        navigateTo('/employee')
-        break
-
-      default:
-        navigateTo('/auth')
-    }
+  switch (authStore.role) {
+    case 'admin':    navigateTo('/admin');    break
+    case 'grh':      navigateTo('/grh');      break
+    case 'employee': navigateTo('/employee'); break
+    default:         navigateTo('/auth/login')
   }
 })
 </script>
 
 <template>
-  <div
-    v-if="loading"
-    class="flex min-h-screen items-center justify-center"
-  >
-    Chargement...
+  <div class="flex min-h-screen items-center justify-center">
+    <div class="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
   </div>
 </template>
