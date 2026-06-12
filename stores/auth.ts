@@ -60,12 +60,13 @@ export const useAuthStore = defineStore('auth', () => {
       if (!apiUser) {
       throw new Error("Utilisateur ou données invalides")
     }
-      // Normalize: backend returns { id, name, email, role, ... }
+      // Normalize: backend returns { id, name, email, role, department, ... }
       const normalized = {
         id:          apiUser.id ?? apiUser._id,
         name:        apiUser.username ?? apiUser.name,
         email:       apiUser.email,
-        accountType: apiUser.role   // frontend uses 'accountType'
+        accountType: apiUser.role,   // frontend uses 'accountType'
+        department:  apiUser.department ?? apiUser.departement ?? null
       }
 
       user.value    = normalized
