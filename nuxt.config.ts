@@ -36,7 +36,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      apiBase: 'https://back-pixel-perfect.onrender.com/api'
+      apiBase: ''
     }
   }
 })
