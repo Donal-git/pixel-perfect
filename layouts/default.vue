@@ -60,7 +60,7 @@ const currentLabel = computed(() => {
 </script>
 
 <template>
-  <div class="flex min-h-screen">
+  <div class="flex min-h-screen overflow-x-hidden">
     <!-- Sidebar -->
     <aside class="hidden w-64 flex-col border-r bg-gray-100 lg:flex">
       <div class="flex h-16 items-center gap-3 border-b px-6">
@@ -116,7 +116,7 @@ const currentLabel = computed(() => {
     </aside>
 
     <!-- Main -->
-    <div class="flex flex-1 flex-col">
+    <div class="flex flex-1 flex-col min-w-0">
       <!-- Header -->
       <header class="flex h-16 items-center justify-between border-b px-4 lg:px-8">
         <div class="flex items-center gap-3 lg:hidden">

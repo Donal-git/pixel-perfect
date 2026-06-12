@@ -73,9 +73,17 @@
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
+  }
+  html {
+    overflow-x: hidden;
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    overflow-x: hidden;
+    max-width: 100%;
+    /* Réserve l'espace du scrollbar pour éviter les sauts de layout (Firefox/Edge) */
+    scrollbar-gutter: stable;
   }
 }
 
@@ -88,10 +96,4 @@
   }
 }
 
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
 
