@@ -1,4 +1,6 @@
 import { defineStore } from 'pinia'
+import { useSurveyStore } from '~/stores/survey'
+import { useFormationStore } from '~/stores/formation'
 
 export const useAuthStore = defineStore('auth', () => {
   const user    = ref<any>(null)
@@ -103,6 +105,9 @@ export const useAuthStore = defineStore('auth', () => {
     if (import.meta.client) {
       localStorage.removeItem('auth_user')
     }
+    // Vider les stores pour éviter toute fuite de données entre sessions
+    useSurveyStore().resetStore()
+    useFormationStore().resetStore()
     await navigateTo('/auth')
   }
 

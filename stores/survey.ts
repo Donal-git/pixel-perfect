@@ -224,6 +224,11 @@ export const useSurveyStore = defineStore('survey', () => {
     surveys.value.filter(s => s.status === 'closed' || isSurveyExpired(s))
   )
 
+  const resetStore = () => {
+    surveys.value = []
+    responses.value = []
+  }
+
   return {
     surveys, responses, loading,
     activeSurveys, draftSurveys, closedSurveys,
@@ -234,6 +239,6 @@ export const useSurveyStore = defineStore('survey', () => {
     submitResponse, saveResponseDraft, getResponseByEmployeeAndSurvey,
     hasEmployeeResponded, getEmployeeSurveys, getSurveysForDepartment,
     getEmployeeResponses, getEmployeeSubmittedResponses, getEmployeeDraftResponses,
-    getSurveyWithResponse, submitDraftResponse
+    getSurveyWithResponse, submitDraftResponse, resetStore
   }
 })

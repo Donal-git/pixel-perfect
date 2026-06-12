@@ -26,6 +26,7 @@ const loadingResponses = ref(false)
 onMounted(async () => {
   await Promise.all([
     surveyStore.loadFromStorage(),
+    surveyStore.loadAllResponses({ status: 'submitted' }),
     formationStore.loadFromStorage(),
     personnelStore.loadFromStorage()
   ])
@@ -118,6 +119,32 @@ const globalKPIs = computed(() => {
     totalParticipants,
     formationCompletion
   }
+})
+
+// ── Réponses sondages par département ─────────────────────────────────────
+const responsesByDepartment = computed(() => {
+  const map: Record<string, number> = {}
+  for (const resp of surveyStore.responses) {
+    const member = personnelStore.members.find(m => m.id === resp.employee_id)
+    const dept = member?.department || 'Non assigné'
+    map[dept] = (map[dept] ?? 0) + 1
+  }
+  return Object.entries(map)
+    .map(([dept, count]) => ({ dept, count }))
+    .sort((a, b) => b.count - a.count)
+})
+
+// ── Formations par département ─────────────────────────────────────────────
+const formationsByDepartment = computed(() => {
+  const map: Record<string, number> = {}
+  for (const f of formationStore.formations) {
+    for (const dept of (f.departments ?? [])) {
+      map[dept] = (map[dept] ?? 0) + f.participants
+    }
+  }
+  return Object.entries(map)
+    .map(([dept, participants]) => ({ dept, participants }))
+    .sort((a, b) => b.participants - a.participants)
 })
 
 // ── Activités récentes ─────────────────────────────────────────────────────
@@ -227,6 +254,20 @@ const exportExcelReport = async () => {
   }))
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(activityData), 'Activités')
 
+  const deptSurveyData = responsesByDepartment.value.map((item, i) => ({
+    Rang: i + 1,
+    Département: item.dept,
+    'Réponses sondages': item.count
+  }))
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(deptSurveyData.length ? deptSurveyData : [{ Info: 'Aucune réponse' }]), 'Réponses par dép.')
+
+  const deptFormationData = formationsByDepartment.value.map((item, i) => ({
+    Rang: i + 1,
+    Département: item.dept,
+    'Participants formations': item.participants
+  }))
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(deptFormationData.length ? deptFormationData : [{ Info: 'Aucune donnée' }]), 'Formations par dép.')
+
   const excelArray = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
   const blob = new Blob([excelArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
   const filename = `rapport-${new Date().toISOString().slice(0, 10)}.xlsx`
@@ -289,6 +330,40 @@ const exportPdfReport = async () => {
       y = 40
     }
   })
+
+  y += 10
+  doc.setFontSize(14)
+  doc.text('Réponses par département', 40, y)
+  y += 20
+  if (responsesByDepartment.value.length === 0) {
+    doc.setFontSize(12)
+    doc.text('Aucune réponse enregistrée', 40, y)
+    y += lineHeight
+  } else {
+    responsesByDepartment.value.forEach(item => {
+      doc.setFontSize(12)
+      doc.text(`• ${item.dept} : ${item.count} réponse(s)`, 40, y)
+      y += lineHeight
+      if (y > 760) { doc.addPage(); y = 40 }
+    })
+  }
+
+  y += 10
+  doc.setFontSize(14)
+  doc.text('Formations par département', 40, y)
+  y += 20
+  if (formationsByDepartment.value.length === 0) {
+    doc.setFontSize(12)
+    doc.text('Aucune formation assignée à un département', 40, y)
+    y += lineHeight
+  } else {
+    formationsByDepartment.value.forEach(item => {
+      doc.setFontSize(12)
+      doc.text(`• ${item.dept} : ${item.participants} participant(s)`, 40, y)
+      y += lineHeight
+      if (y > 760) { doc.addPage(); y = 40 }
+    })
+  }
 
   y += 10
   doc.setFontSize(14)
@@ -496,22 +571,29 @@ const statusColor = (status: string) => {
             </div>
           </div>
 
-          <!-- Top départements -->
+          <!-- Réponses par département -->
           <div>
-            <h3 class="text-sm font-semibold text-gray-700 mb-3">Départements les plus actifs</h3>
-            <div class="space-y-2">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Réponses par département</h3>
+            <div v-if="responsesByDepartment.length === 0" class="text-xs text-gray-400 py-2">
+              Aucune réponse enregistrée
+            </div>
+            <div v-else class="space-y-2">
               <div
-                v-for="(dept, i) in surveyStats.topDepartments"
-                :key="dept.dept"
-                class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                v-for="(item, i) in responsesByDepartment"
+                :key="item.dept"
+                class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
               >
-                <div class="flex items-center gap-3">
-                  <span class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">
-                    {{ i + 1 }}
-                  </span>
-                  <span class="text-sm font-medium text-gray-900">{{ dept.dept }}</span>
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">
+                  {{ i + 1 }}
+                </span>
+                <span class="flex-1 text-sm font-medium text-gray-900 truncate">{{ item.dept }}</span>
+                <div class="flex-1 overflow-hidden rounded-full bg-gray-200 mx-2" style="height:10px;">
+                  <div
+                    class="h-full rounded-full bg-blue-500 transition-all duration-700"
+                    :style="{ width: (responsesByDepartment[0]?.count ? Math.round((item.count / responsesByDepartment[0].count) * 100) : 0) + '%' }"
+                  />
                 </div>
-                <span class="text-sm font-bold text-gray-900">{{ dept.count }} membres</span>
+                <span class="shrink-0 text-sm font-bold text-gray-900">{{ item.count }} rép.</span>
               </div>
             </div>
           </div>
@@ -652,6 +734,27 @@ const statusColor = (status: string) => {
                 <span class="text-sm text-gray-500">Taux de complétion</span>
               </div>
               <p class="text-3xl font-bold text-purple-600">{{ formationStats.avgCompletionRate }}%</p>
+            </div>
+          </div>
+
+          <!-- Formations par département -->
+          <div>
+            <h3 class="text-sm font-semibold text-gray-700 mb-3">Participants par département</h3>
+            <div v-if="formationsByDepartment.length === 0" class="text-xs text-gray-400 py-2">
+              Aucune formation assignée à un département
+            </div>
+            <div v-else class="space-y-2">
+              <div
+                v-for="(item, i) in formationsByDepartment.slice(0, 5)"
+                :key="item.dept"
+                class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+              >
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-bold text-purple-600">
+                  {{ i + 1 }}
+                </span>
+                <span class="flex-1 text-sm font-medium text-gray-900 truncate">{{ item.dept }}</span>
+                <span class="shrink-0 text-sm font-bold text-gray-900">{{ item.participants }} participants</span>
+              </div>
             </div>
           </div>
 

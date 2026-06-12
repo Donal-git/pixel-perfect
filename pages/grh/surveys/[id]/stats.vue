@@ -5,10 +5,12 @@ import {
   AlertCircle, CheckCircle2, Clock
 } from 'lucide-vue-next'
 import { useSurveyStore, type Survey, type SurveyResponse } from '~/stores/survey'
+import { usePersonnelStore } from '~/stores/personnel'
 import { useAuthStore } from '~/stores/auth'
 
 const route = useRoute()
 const surveyStore = useSurveyStore()
+const personnelStore = usePersonnelStore()
 const authStore = useAuthStore()
 
 const backPath = computed(() =>
@@ -24,7 +26,10 @@ const hasError = ref(false)
 onMounted(async () => {
   loading.value = true
   try {
-    await surveyStore.loadFromStorage()
+    await Promise.all([
+      surveyStore.loadFromStorage(),
+      personnelStore.loadFromStorage()
+    ])
     survey.value = surveyStore.getSurveyById(surveyId)
     if (!survey.value) { hasError.value = true; return }
     responses.value = await surveyStore.getSurveyResponses(surveyId)
@@ -38,6 +43,19 @@ onMounted(async () => {
 
 // Uniquement les réponses soumises (pas les brouillons)
 const submitted = computed(() => responses.value.filter(r => r.status === 'submitted'))
+
+// Réponses groupées par département (via personnel)
+const responsesByDepartment = computed(() => {
+  const map: Record<string, number> = {}
+  for (const resp of submitted.value) {
+    const member = personnelStore.members.find(m => m.id === resp.employee_id)
+    const dept = member?.department || 'Non assigné'
+    map[dept] = (map[dept] ?? 0) + 1
+  }
+  return Object.entries(map)
+    .map(([dept, count]) => ({ dept, count }))
+    .sort((a, b) => b.count - a.count)
+})
 
 const isClosed = computed(() =>
   !survey.value ? false : surveyStore.isSurveyExpired(survey.value) || survey.value.status === 'closed'
@@ -251,6 +269,31 @@ const statusConfig: Record<string, { label: string; class: string }> = {
             :key="dept"
             class="rounded-md bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700"
           >{{ dept }}</span>
+        </div>
+      </div>
+
+      <!-- PARTICIPATION PAR DÉPARTEMENT -->
+      <div v-if="submitted.length > 0" class="rounded-xl border bg-white p-5 shadow-sm">
+        <h2 class="mb-4 text-sm font-semibold text-gray-700">Participation par département</h2>
+        <div class="space-y-3">
+          <div
+            v-for="item in responsesByDepartment"
+            :key="item.dept"
+            class="flex items-center gap-3"
+          >
+            <span class="w-28 shrink-0 truncate text-xs font-medium text-gray-700" :title="item.dept">
+              {{ item.dept }}
+            </span>
+            <div class="flex-1 overflow-hidden rounded-full bg-gray-100" style="height: 18px;">
+              <div
+                class="h-full rounded-full bg-blue-500 transition-all duration-700"
+                :style="{ width: (submitted.length > 0 ? Math.round((item.count / submitted.length) * 100) : 0) + '%' }"
+              />
+            </div>
+            <span class="w-24 shrink-0 text-right text-xs font-medium text-gray-600">
+              {{ item.count }} rép. <span class="text-gray-400">({{ submitted.length > 0 ? Math.round((item.count / submitted.length) * 100) : 0 }}%)</span>
+            </span>
+          </div>
         </div>
       </div>
 

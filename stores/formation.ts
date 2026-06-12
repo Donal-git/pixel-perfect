@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { useAuthStore } from '~/stores/auth'
 
 export interface Formation {
   id: string
@@ -55,12 +56,14 @@ export const useFormationStore = defineStore('formation', () => {
   const loadRegistrationsFromStorage = async () => {
     if (!import.meta.client) return
     try {
+      const authStore = useAuthStore()
+      const employeeId = authStore.user?.id ?? ''
       const res = await api('/formation/my')
       const myFormations = res.data as Formation[]
       registrations.value = myFormations.map(f => ({
         id: `reg-${f.id}`,
         formation_id: f.id,
-        employee_id: '',
+        employee_id: employeeId,
         registered_at: f.created_at,
         status: 'inscrit' as const
       }))
@@ -103,34 +106,37 @@ export const useFormationStore = defineStore('formation', () => {
     formations.value.find(f => f.id === id) || null
 
   // ── Inscriptions ────────────────────────────────────────────────────────────
-  const registerForFormation = async (formation_id: string, _employee_id: string) => {
+  const registerForFormation = async (formation_id: string, employee_id: string) => {
     const formation = formations.value.find(f => f.id === formation_id)
     if (formation?.end_date && new Date(formation.end_date) < new Date()) {
       throw new Error('Les inscriptions pour cette formation sont clôturées.')
     }
     const res = await api(`/formation/${formation_id}/register`, {
       method: 'POST',
-      body: { employee_id: _employee_id }
+      body: { employee_id }
     })
     const reg = res.data as FormationRegistration
+    if (!reg.employee_id) reg.employee_id = employee_id
     registrations.value.push(reg)
     const f = formations.value.find(f => f.id === formation_id)
     if (f) f.participants++
     return reg
   }
 
-  const unregisterFromFormation = async (formation_id: string, _employee_id: string) => {
+  const unregisterFromFormation = async (formation_id: string, employee_id: string) => {
     await api(`/formation/${formation_id}/register`, {
       method: 'DELETE',
-      body: { employee_id: _employee_id }
+      body: { employee_id }
     })
-    registrations.value = registrations.value.filter(r => r.formation_id !== formation_id)
+    registrations.value = registrations.value.filter(
+      r => !(r.formation_id === formation_id && r.employee_id === employee_id)
+    )
     const f = formations.value.find(f => f.id === formation_id)
     if (f && f.participants > 0) f.participants--
   }
 
-  const isEmployeeRegistered = (formation_id: string, _employee_id: string) =>
-    registrations.value.some(r => r.formation_id === formation_id)
+  const isEmployeeRegistered = (formation_id: string, employee_id: string) =>
+    registrations.value.some(r => r.formation_id === formation_id && r.employee_id === employee_id)
 
   const getEmployeeFormations = async (_employee_id: string): Promise<Formation[]> => {
     const res = await api('/formation/my')
@@ -170,6 +176,11 @@ export const useFormationStore = defineStore('formation', () => {
   const ongoingFormations   = computed(() => formations.value.filter(f => f.status === 'en_cours'))
   const draftFormations     = computed(() => formations.value.filter(f => f.status === 'brouillon'))
 
+  const resetStore = () => {
+    formations.value = []
+    registrations.value = []
+  }
+
   return {
     formations, registrations, loading,
     availableFormations, ongoingFormations, draftFormations,
@@ -177,6 +188,7 @@ export const useFormationStore = defineStore('formation', () => {
     createFormation, updateFormation, publishFormation, deleteFormation, getFormationById,
     registerForFormation, unregisterFromFormation,
     isEmployeeRegistered, getEmployeeFormations,
-    getFormationRegistrations, updateRegistrationStatus, getFormationsForDepartment
+    getFormationRegistrations, updateRegistrationStatus, getFormationsForDepartment,
+    resetStore
   }
 })
