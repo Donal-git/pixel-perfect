@@ -91,11 +91,12 @@ const resetRequest = () => {
 
         <!-- Logo commun -->
         <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-8 text-center">
-          <div class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 shadow-lg">
-            <span class="text-3xl">📊</span>
+          <div class="mx-auto mb-4 flex items-center justify-center">
+            <div class="rounded-2xl bg-white px-5 py-3 shadow-lg">
+              <img src="/logo.png" alt="EchoRH" class="h-12 w-auto object-contain" />
+            </div>
           </div>
-          <h1 class="text-2xl font-bold text-white">Sondage RH</h1>
-          <p class="mt-1 text-sm text-white/70">Gestion RH moderne & intuitive</p>
+          <p class="text-sm text-white/70">Gestion RH moderne & intuitive</p>
         </div>
 
         <!-- ── VUE CONNEXION ───────────────────────────────────────────── -->

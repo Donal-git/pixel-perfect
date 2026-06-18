@@ -63,17 +63,11 @@ const currentLabel = computed(() => {
   <div class="flex min-h-screen overflow-x-hidden">
     <!-- Sidebar -->
     <aside class="hidden w-64 flex-col border-r bg-gray-100 lg:flex">
-      <div class="flex h-16 items-center gap-3 border-b px-6">
-        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500">
-          <ClipboardList class="h-5 w-5 text-white" />
-        </div>
-
-        <div>
-          <p class="text-sm font-semibold">SondageRH</p>
-          <p class="text-xs capitalize text-gray-500">
-            {{ authStore.role }}
-          </p>
-        </div>
+      <div class="flex h-16 items-center justify-between border-b px-6">
+        <img src="/logo.png" alt="EchoRH" class="h-8 w-auto object-contain" />
+        <span class="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium capitalize text-blue-700">
+          {{ authStore.role }}
+        </span>
       </div>
 
       <nav class="flex-1 space-y-1 p-4">
@@ -119,9 +113,8 @@ const currentLabel = computed(() => {
     <div class="flex flex-1 flex-col min-w-0">
       <!-- Header -->
       <header class="flex h-16 items-center justify-between border-b px-4 lg:px-8">
-        <div class="flex items-center gap-3 lg:hidden">
-          <ClipboardList class="h-5 w-5" />
-          <span class="font-semibold">SondageRH</span>
+        <div class="flex items-center lg:hidden">
+          <img src="/logo.png" alt="EchoRH" class="h-8 w-auto object-contain" />
         </div>
 
         <div class="hidden lg:block">
