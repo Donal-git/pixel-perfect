@@ -282,24 +282,14 @@ const formatDate = (d: string) =>
 
 const roleConfig = {
   admin:    { label: 'Admin',   class: 'bg-red-100 text-red-700 border-red-200'    },
-  grh:      { label: 'GRH',    class: 'bg-blue-100 text-blue-700 border-blue-200'  },
+  grh:      { label: 'GRH',    class: 'bg-teal-50 text-teal-700 border-teal-200'  },
   employee: { label: 'Employé', class: 'bg-gray-100 text-gray-600 border-gray-200' }
 }
 
-const deptColors: Record<string, string> = {
-  Direction:  'bg-violet-100 text-violet-700',
-  RH:         'bg-pink-100 text-pink-700',
-  Finance:    'bg-green-100 text-green-700',
-  IT:         'bg-cyan-100 text-cyan-700',
-  Commercial: 'bg-orange-100 text-orange-700',
-  Production: 'bg-amber-100 text-amber-700',
-  Marketing:  'bg-rose-100 text-rose-700',
-  Logistique: 'bg-teal-100 text-teal-700'
-}
 
 const avatarColor = (name: string | undefined) => {
   const colors = [
-    'bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-rose-500',
+    'bg-teal-500', 'bg-slate-500', 'bg-green-500', 'bg-rose-500',
     'bg-amber-500', 'bg-cyan-500', 'bg-indigo-500', 'bg-teal-500'
   ]
   if (!name || typeof name !== 'string') return colors[0]
@@ -328,7 +318,7 @@ const initials = (name: string | undefined) => {
       <button
         v-if="isAdmin"
         @click="openCreateModal"
-        class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+        class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700"
       >
         <Plus class="h-4 w-4" />
         Nouveau membre
@@ -338,8 +328,8 @@ const initials = (name: string | undefined) => {
     <!-- KPI CARDS ───────────────────────────────────────────────────────── -->
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-5">
       <div class="rounded-xl border bg-white p-4 shadow-sm">
-        <div class="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
-          <Users class="h-4 w-4 text-blue-600" />
+        <div class="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50">
+          <Users class="h-4 w-4 text-teal-600" />
         </div>
         <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
         <p class="mt-0.5 text-xs text-gray-500">Total</p>
@@ -359,10 +349,10 @@ const initials = (name: string | undefined) => {
         <p class="mt-0.5 text-xs text-gray-500">Admins</p>
       </div>
       <div class="rounded-xl border bg-white p-4 shadow-sm">
-        <div class="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
-          <UserCog class="h-4 w-4 text-blue-600" />
+        <div class="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50">
+          <UserCog class="h-4 w-4 text-teal-600" />
         </div>
-        <p class="text-2xl font-bold text-blue-700">{{ stats.grh }}</p>
+        <p class="text-2xl font-bold text-teal-700">{{ stats.grh }}</p>
         <p class="mt-0.5 text-xs text-gray-500">GRH</p>
       </div>
       <div class="rounded-xl border bg-white p-4 shadow-sm">
@@ -382,12 +372,12 @@ const initials = (name: string | undefined) => {
         @click="deptFilter = deptFilter === dept ? '' : dept"
         class="flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition hover:shadow-sm"
         :class="deptFilter === dept
-          ? `${deptColors[dept] || 'bg-gray-100 text-gray-700'} border-current`
+          ? 'bg-teal-50 text-teal-700 border-teal-300'
           : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'"
       >
         <span
           class="flex h-4 w-4 items-center justify-center rounded-full text-white text-[10px] font-bold"
-          :class="deptFilter === dept ? 'bg-current opacity-80' : 'bg-gray-400'"
+          :class="deptFilter === dept ? 'bg-teal-500' : 'bg-gray-400'"
           style="font-size:9px"
         >{{ dept[0] }}</span>
         {{ dept }}
@@ -403,20 +393,20 @@ const initials = (name: string | undefined) => {
           v-model="searchQuery"
           type="text"
           placeholder="Rechercher par nom, email, poste, département..."
-          class="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          class="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
         />
       </div>
-      <select v-model="deptFilter" class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+      <select v-model="deptFilter" class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
         <option value="">Tous les départements</option>
         <option v-for="d in DEPARTMENTS" :key="d" :value="d">{{ d }}</option>
       </select>
-      <select v-model="roleFilter" class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+      <select v-model="roleFilter" class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
         <option value="">Tous les rôles</option>
         <option value="admin">Admin</option>
         <option value="grh">GRH</option>
         <option value="employee">Employé</option>
       </select>
-      <select v-model="statusFilter" class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+      <select v-model="statusFilter" class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
         <option value="">Tous les statuts</option>
         <option value="actif">Actif</option>
         <option value="inactif">Inactif</option>
@@ -478,7 +468,7 @@ const initials = (name: string | undefined) => {
                 </div>
               </td>
               <td class="px-5 py-3.5">
-                <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium" :class="deptColors[member.department] || 'bg-gray-100 text-gray-600'">
+                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
                   {{ member.department }}
                 </span>
               </td>
@@ -501,7 +491,7 @@ const initials = (name: string | undefined) => {
               </td>
               <td class="px-5 py-3.5 text-right">
                 <div v-if="isAdmin" class="flex items-center justify-end gap-1.5">
-                  <button @click="openEditModal(member)" class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600" title="Modifier">
+                  <button @click="openEditModal(member)" class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600" title="Modifier">
                     <Pencil class="h-3.5 w-3.5" />
                   </button>
                   <button @click="openDeleteModal(member.id)" class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500" title="Supprimer">
@@ -525,7 +515,7 @@ const initials = (name: string | undefined) => {
           <button
             v-for="p in totalPages" :key="p" @click="currentPage = p"
             class="flex h-7 w-7 items-center justify-center rounded-lg border text-xs transition"
-            :class="p === currentPage ? 'border-blue-500 bg-blue-600 text-white' : 'border-gray-200 text-gray-600 hover:bg-gray-50'"
+            :class="p === currentPage ? 'border-teal-500 bg-teal-600 text-white' : 'border-gray-200 text-gray-600 hover:bg-gray-50'"
           >{{ p }}</button>
           <button @click="currentPage++" :disabled="currentPage === totalPages" class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-xs text-gray-600 transition hover:bg-gray-50 disabled:opacity-40">›</button>
         </div>
@@ -561,7 +551,7 @@ const initials = (name: string | undefined) => {
                     Nom complet <span class="text-red-500">*</span>
                   </label>
                   <input v-model="form.name" type="text" placeholder="Ex : Jean Kaboré"
-                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100" />
+                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100" />
                 </div>
 
                 <!-- Email -->
@@ -570,14 +560,14 @@ const initials = (name: string | undefined) => {
                     Email <span class="text-red-500">*</span>
                   </label>
                   <input v-model="form.email" type="email" placeholder="email@entreprise.com"
-                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100" />
+                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100" />
                 </div>
 
                 <!-- Téléphone -->
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Téléphone</label>
                   <input v-model="form.phone" type="tel" placeholder="+226 70 00 00 00"
-                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100" />
+                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100" />
                 </div>
 
                 <!-- Département -->
@@ -586,7 +576,7 @@ const initials = (name: string | undefined) => {
                     Département <span class="text-red-500">*</span>
                   </label>
                   <select v-model="form.department"
-                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
                     <option v-for="d in DEPARTMENTS" :key="d" :value="d">{{ d }}</option>
                   </select>
                 </div>
@@ -597,14 +587,14 @@ const initials = (name: string | undefined) => {
                     Poste <span class="text-red-500">*</span>
                   </label>
                   <input v-model="form.position" type="text" placeholder="Ex : Développeur Senior"
-                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100" />
+                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100" />
                 </div>
 
                 <!-- Rôle -->
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Rôle</label>
                   <select v-model="form.role"
-                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
                     <option value="employee">Employé</option>
                     <option value="grh">GRH</option>
                     <option value="admin">Admin</option>
@@ -615,7 +605,7 @@ const initials = (name: string | undefined) => {
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Statut</label>
                   <select v-model="form.status"
-                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
                     <option value="actif">Actif</option>
                     <option value="inactif">Inactif</option>
                   </select>
@@ -623,10 +613,10 @@ const initials = (name: string | undefined) => {
 
                 <!-- ── Mot de passe généré (création uniquement) ── -->
                 <div v-if="!editingId" class="sm:col-span-2">
-                  <div class="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                  <div class="rounded-xl border border-teal-100 bg-teal-50 p-4">
                     <div class="flex items-center gap-2 mb-3">
-                      <KeyRound class="h-4 w-4 text-blue-600" />
-                      <span class="text-sm font-semibold text-blue-800">Mot de passe généré automatiquement</span>
+                      <KeyRound class="h-4 w-4 text-teal-600" />
+                      <span class="text-sm font-semibold text-teal-800">Mot de passe généré automatiquement</span>
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -636,7 +626,7 @@ const initials = (name: string | undefined) => {
                           :type="showPasswordInForm ? 'text' : 'password'"
                           :value="generatedPassword"
                           readonly
-                          class="w-full rounded-lg border border-blue-200 bg-white px-4 py-2.5 pr-10 text-sm font-mono text-gray-800 outline-none select-all cursor-text"
+                          class="w-full rounded-lg border border-teal-200 bg-white px-4 py-2.5 pr-10 text-sm font-mono text-gray-800 outline-none select-all cursor-text"
                         />
                         <button
                           type="button"
@@ -654,7 +644,7 @@ const initials = (name: string | undefined) => {
                         type="button"
                         @click="regeneratePassword"
                         title="Générer un nouveau mot de passe"
-                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-blue-200 bg-white text-blue-600 hover:bg-blue-100 transition"
+                        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-teal-200 bg-white text-teal-600 hover:bg-teal-100 transition"
                       >
                         <RefreshCw class="h-4 w-4" />
                       </button>
@@ -667,14 +657,14 @@ const initials = (name: string | undefined) => {
                         class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition"
                         :class="copiedInForm
                           ? 'border-green-300 bg-green-50 text-green-600'
-                          : 'border-blue-200 bg-white text-blue-600 hover:bg-blue-100'"
+                          : 'border-teal-200 bg-white text-teal-600 hover:bg-teal-100'"
                       >
                         <Check v-if="copiedInForm" class="h-4 w-4" />
                         <Copy v-else class="h-4 w-4" />
                       </button>
                     </div>
 
-                    <p class="mt-2.5 text-xs text-blue-600/80">
+                    <p class="mt-2.5 text-xs text-teal-600/80">
                       Ce mot de passe sera enregistré sur le compte du membre et affiché après la création.
                     </p>
                   </div>
@@ -690,7 +680,7 @@ const initials = (name: string | undefined) => {
                 Annuler
               </button>
               <button v-if="isAdmin" @click="handleSubmitForm" :disabled="formLoading"
-                class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50">
+                class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white transition hover:bg-teal-700 disabled:opacity-50">
                 <svg v-if="formLoading" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />

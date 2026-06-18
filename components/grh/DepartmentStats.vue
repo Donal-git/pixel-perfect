@@ -21,15 +21,15 @@ const maxScore = computed(() =>
 const avatarColor = (d: DeptActivity) => {
   const score = d.participants + d.surveysReceived * 10
   const pct = (score / maxScore.value) * 100
-  if (pct >= 66) return 'bg-blue-600'
-  if (pct >= 33) return 'bg-blue-400'
-  return 'bg-gray-300'
+  if (pct >= 66) return 'bg-teal-600'
+  if (pct >= 33) return 'bg-teal-400'
+  return 'bg-slate-300'
 }
 
 const engagementLabel = (d: DeptActivity) => {
   const score = d.participants + d.surveysReceived * 10
   const pct = (score / maxScore.value) * 100
-  if (pct >= 66) return { text: 'Très actif', class: 'bg-blue-100 text-blue-700' }
+  if (pct >= 66) return { text: 'Très actif', class: 'bg-teal-50 text-teal-700' }
   if (pct >= 33) return { text: 'Actif', class: 'bg-green-100 text-green-700' }
   return { text: 'Peu actif', class: 'bg-gray-100 text-gray-500' }
 }

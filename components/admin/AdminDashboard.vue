@@ -1,14 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import {
-  Users,
-  FileText,
-  GraduationCap,
-  TrendingUp,
-  Activity,
-  CheckCircle,
-  Clock,
-  AlertCircle
+  Users, FileText, GraduationCap, TrendingUp,
+  Activity, CheckCircle
 } from 'lucide-vue-next'
 import { usePersonnelStore } from '~/stores/personnel'
 import { useSurveyStore } from '~/stores/survey'
@@ -30,7 +24,6 @@ onMounted(async () => {
   ])
 })
 
-// ── KPIs réels ──────────────────────────────────────────────────────────────
 const stats = computed(() => {
   const members = personnelStore.members
   const surveys = surveyStore.surveys
@@ -52,35 +45,21 @@ const stats = computed(() => {
   const ongoingFormations = formations.filter(f => f.status === 'en_cours').length
   const totalParticipants = formations.reduce((sum, f) => sum + f.participants, 0)
 
-  // Calcul du taux de participation réel basé sur les réponses
   const submittedResponses = responses.filter(r => r.status === 'submitted').length
   const avgParticipationRate = employeeCount > 0
-    ? Math.round((submittedResponses / employeeCount) * 100)
-    : 0
+    ? Math.round((submittedResponses / employeeCount) * 100) : 0
 
   return {
-    totalUsers,
-    activeUsers,
-    inactiveUsers,
-    adminCount,
-    grhCount,
-    employeeCount,
-    activeSurveys,
-    draftSurveys,
-    closedSurveys,
-    availableFormations,
-    ongoingFormations,
-    totalParticipants,
+    totalUsers, activeUsers, inactiveUsers, adminCount, grhCount, employeeCount,
+    activeSurveys, draftSurveys, closedSurveys,
+    availableFormations, ongoingFormations, totalParticipants,
     avgParticipationRate,
     departmentCount: personnelStore.byDepartment.length
   }
 })
 
-// ── Activités récentes (basées sur les données réelles) ─────────────────────
 const recentActivities = computed(() => {
   const activities: { action: string; user: string; time: string; type: 'survey' | 'personnel' | 'formation' }[] = []
-
-  // Ajouter les sondages récents
   surveyStore.surveys.slice(0, 3).forEach(s => {
     activities.push({
       action: `Sondage "${s.title}"`,
@@ -89,8 +68,6 @@ const recentActivities = computed(() => {
       type: 'survey'
     })
   })
-
-  // Ajouter les formations récentes
   formationStore.formations.slice(0, 2).forEach(f => {
     activities.push({
       action: `Formation "${f.title}"`,
@@ -99,8 +76,6 @@ const recentActivities = computed(() => {
       type: 'formation'
     })
   })
-
-  // Ajouter les membres récents
   personnelStore.members.slice(0, 2).forEach(m => {
     activities.push({
       action: `${m.name} a rejoint`,
@@ -109,7 +84,6 @@ const recentActivities = computed(() => {
       type: 'personnel'
     })
   })
-
   return activities.sort((a, b) => {
     const timeA = a.time.includes('minutes') ? 1 : a.time.includes('heures') ? 2 : a.time.includes('jours') ? 3 : 4
     const timeB = b.time.includes('minutes') ? 1 : b.time.includes('heures') ? 2 : b.time.includes('jours') ? 3 : 4
@@ -117,34 +91,16 @@ const recentActivities = computed(() => {
   }).slice(0, 6)
 })
 
-// ── Statut système ──────────────────────────────────────────────────────────
 const systemStatus = computed(() => {
   const config = appConfigStore.config
   return [
-    {
-      label: 'Configuration',
-      status: config.companyName || 'Défaut',
-      ok: true
-    },
-    {
-      label: 'Sondages/mois',
-      status: `${surveyStore.surveys.length}/${config.maxSurveysPerMonth}`,
-      ok: surveyStore.surveys.length < config.maxSurveysPerMonth
-    },
-    {
-      label: 'Surveys anonymes',
-      status: config.allowAnonymousSurveys ? 'Autorisés' : 'Interdits',
-      ok: true
-    },
-    {
-      label: 'Départements',
-      status: `${appConfigStore.departments.length} actifs`,
-      ok: true
-    }
+    { label: 'Configuration', status: config.companyName || 'Défaut', ok: true },
+    { label: 'Sondages/mois', status: `${surveyStore.surveys.length}/${config.maxSurveysPerMonth}`, ok: surveyStore.surveys.length < config.maxSurveysPerMonth },
+    { label: 'Surveys anonymes', status: config.allowAnonymousSurveys ? 'Autorisés' : 'Interdits', ok: true },
+    { label: 'Départements', status: `${appConfigStore.departments.length} actifs`, ok: true }
   ]
 })
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
 function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr)
   const now = new Date()
@@ -152,7 +108,6 @@ function formatRelativeTime(dateStr: string): string {
   const diffMins = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMins / 60)
   const diffDays = Math.floor(diffHours / 24)
-
   if (diffMins < 60) return `Il y a ${diffMins} min`
   if (diffHours < 24) return `Il y a ${diffHours} h`
   if (diffDays < 30) return `Il y a ${diffDays} j`
@@ -170,193 +125,167 @@ const activityIcon = (type: 'survey' | 'personnel' | 'formation') => {
 
 const activityColor = (type: 'survey' | 'personnel' | 'formation') => {
   switch (type) {
-    case 'survey': return 'bg-blue-500'
-    case 'personnel': return 'bg-green-500'
-    case 'formation': return 'bg-purple-500'
-    default: return 'bg-gray-500'
+    case 'survey': return 'bg-teal-600'
+    case 'personnel': return 'bg-slate-500'
+    case 'formation': return 'bg-emerald-600'
+    default: return 'bg-slate-400'
   }
 }
 </script>
 
 <template>
-  <div class="space-y-6 animate-fade-in">
+  <div class="space-y-6">
 
     <!-- HEADER -->
     <div>
-      <h1 class="text-2xl font-bold text-foreground">
-        Tableau de bord administrateur
-      </h1>
-      <p class="text-muted-foreground">
-        Vue d'ensemble du système
-      </p>
+      <h1 class="text-2xl font-bold text-slate-900">Tableau de bord administrateur</h1>
+      <p class="mt-1 text-sm text-slate-500">Vue d'ensemble du système</p>
     </div>
 
-    <!-- KPI CARDS ─────────────────────────────────────────────────────────── -->
+    <!-- KPI CARDS -->
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <!-- Total utilisateurs -->
-      <div class="border p-4 rounded-lg bg-white">
+
+      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-muted-foreground">Total utilisateurs</p>
-            <p class="text-3xl font-bold mt-1">{{ stats.totalUsers }}</p>
+            <p class="text-sm text-slate-500">Total utilisateurs</p>
+            <p class="mt-1 text-3xl font-bold text-slate-900">{{ stats.totalUsers }}</p>
           </div>
-          <div class="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
-            <Users class="h-6 w-6 text-blue-600" />
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50">
+            <Users class="h-6 w-6 text-teal-600" />
           </div>
         </div>
-
+        <p class="mt-3 text-xs text-slate-400">{{ stats.activeUsers }} actifs · {{ stats.inactiveUsers }} inactifs</p>
       </div>
 
-      <!-- Sondages actifs -->
-      <div class="border p-4 rounded-lg bg-white">
+      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-muted-foreground">Sondages actifs</p>
-            <p class="text-3xl font-bold mt-1">{{ stats.activeSurveys }}</p>
+            <p class="text-sm text-slate-500">Sondages actifs</p>
+            <p class="mt-1 text-3xl font-bold text-slate-900">{{ stats.activeSurveys }}</p>
           </div>
-          <div class="h-12 w-12 rounded-lg bg-green-100 flex items-center justify-center">
-            <FileText class="h-6 w-6 text-green-600" />
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
+            <FileText class="h-6 w-6 text-emerald-600" />
           </div>
         </div>
-        <div class="mt-2 text-xs text-gray-500">
-          {{ stats.draftSurveys }} brouillon(s) · {{ stats.closedSurveys }} terminé(s)
-        </div>
+        <p class="mt-3 text-xs text-slate-400">{{ stats.draftSurveys }} brouillon(s) · {{ stats.closedSurveys }} terminé(s)</p>
       </div>
 
-      <!-- Formations en cours -->
-      <div class="border p-4 rounded-lg bg-white">
+      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-muted-foreground">Formations en cours</p>
-            <p class="text-3xl font-bold mt-1">{{ stats.ongoingFormations }}</p>
+            <p class="text-sm text-slate-500">Formations en cours</p>
+            <p class="mt-1 text-3xl font-bold text-slate-900">{{ stats.ongoingFormations }}</p>
           </div>
-          <div class="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center">
-            <GraduationCap class="h-6 w-6 text-purple-600" />
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+            <GraduationCap class="h-6 w-6 text-slate-600" />
           </div>
         </div>
-        <div class="mt-2 text-xs text-gray-500">
-          {{ stats.availableFormations }} disponibles · {{ stats.totalParticipants }} participants
-        </div>
+        <p class="mt-3 text-xs text-slate-400">{{ stats.availableFormations }} disponibles · {{ stats.totalParticipants }} participants</p>
       </div>
 
-      <!-- Taux de participation -->
-      <div class="border p-4 rounded-lg bg-white">
+      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-muted-foreground">Participation moyenne</p>
-            <p class="text-3xl font-bold mt-1">{{ stats.avgParticipationRate }}%</p>
+            <p class="text-sm text-slate-500">Participation moyenne</p>
+            <p class="mt-1 text-3xl font-bold text-slate-900">{{ stats.avgParticipationRate }}%</p>
           </div>
-          <div class="h-12 w-12 rounded-lg bg-amber-100 flex items-center justify-center">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50">
             <TrendingUp class="h-6 w-6 text-amber-600" />
           </div>
         </div>
-
+        <p class="mt-3 text-xs text-slate-400">{{ stats.departmentCount }} département(s) actifs</p>
       </div>
     </div>
 
-    <!-- SECTIONS ──────────────────────────────────────────────────────────── -->
+    <!-- SECTIONS -->
     <div class="grid gap-6 lg:grid-cols-2">
 
       <!-- ACTIVITÉ RÉCENTE -->
-      <div class="border rounded-xl p-4 bg-white">
-        <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
-          <Activity class="h-5 w-5 text-gray-500" />
+      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900">
+          <Activity class="h-4 w-4 text-slate-400" />
           Activité récente
         </h2>
-
-        <div class="space-y-3">
+        <div class="space-y-1">
           <div
             v-for="(item, i) in recentActivities"
             :key="i"
-            class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition"
+            class="flex items-center gap-3 rounded-lg p-2.5 transition hover:bg-slate-50"
           >
-            <div
-              class="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0"
-              :class="activityColor(item.type)"
-            >
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" :class="activityColor(item.type)">
               <component :is="activityIcon(item.type)" class="h-4 w-4 text-white" />
             </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium truncate">{{ item.action }}</p>
-              <p class="text-xs text-gray-500">{{ item.user }}</p>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium text-slate-800">{{ item.action }}</p>
+              <p class="text-xs text-slate-400">{{ item.user }}</p>
             </div>
-            <span class="text-xs text-gray-400 whitespace-nowrap">
-              {{ item.time }}
-            </span>
+            <span class="shrink-0 text-xs text-slate-400">{{ item.time }}</span>
           </div>
-
-          <div v-if="recentActivities.length === 0" class="text-center py-8 text-gray-500 text-sm">
+          <div v-if="recentActivities.length === 0" class="py-8 text-center text-sm text-slate-400">
             Aucune activité récente
           </div>
         </div>
       </div>
 
       <!-- STATUT SYSTÈME -->
-      <div class="border rounded-xl p-4 bg-white">
-        <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
-          <CheckCircle class="h-5 w-5 text-gray-500" />
+      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h2 class="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900">
+          <CheckCircle class="h-4 w-4 text-slate-400" />
           Statut système
         </h2>
-
-        <div class="space-y-3">
+        <div class="space-y-1">
           <div
             v-for="(item, i) in systemStatus"
             :key="i"
-            class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition"
+            class="flex items-center justify-between rounded-lg p-2.5 transition hover:bg-slate-50"
           >
             <div class="flex items-center gap-3">
-              <div
-                class="h-2 w-2 rounded-full"
-                :class="item.ok ? 'bg-green-500' : 'bg-red-500'"
-              />
-              <span class="text-sm font-medium">{{ item.label }}</span>
+              <div class="h-2 w-2 rounded-full" :class="item.ok ? 'bg-emerald-500' : 'bg-red-500'" />
+              <span class="text-sm font-medium text-slate-700">{{ item.label }}</span>
             </div>
             <span
-              class="text-xs font-medium px-2 py-1 rounded"
-              :class="item.ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
-            >
-              {{ item.status }}
-            </span>
+              class="rounded-full px-2.5 py-0.5 text-xs font-medium"
+              :class="item.ok ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'"
+            >{{ item.status }}</span>
           </div>
         </div>
 
         <!-- Répartition par rôle -->
-        <div class="mt-6 pt-4 border-t">
-          <h3 class="text-sm font-semibold mb-3 text-gray-600">Répartition par rôle</h3>
+        <div class="mt-5 border-t border-slate-100 pt-4">
+          <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Répartition par rôle</h3>
           <div class="grid grid-cols-3 gap-3">
-            <div class="text-center p-3 bg-red-50 rounded-lg">
-              <p class="text-2xl font-bold text-red-600">{{ stats.adminCount }}</p>
-              <p class="text-xs text-red-500">Admins</p>
+            <div class="rounded-lg border border-slate-200 p-3 text-center">
+              <p class="text-2xl font-bold text-slate-900">{{ stats.adminCount }}</p>
+              <p class="text-xs text-slate-500">Admins</p>
             </div>
-            <div class="text-center p-3 bg-blue-50 rounded-lg">
-              <p class="text-2xl font-bold text-blue-600">{{ stats.grhCount }}</p>
-              <p class="text-xs text-blue-500">GRH</p>
+            <div class="rounded-lg border border-teal-100 bg-teal-50 p-3 text-center">
+              <p class="text-2xl font-bold text-teal-700">{{ stats.grhCount }}</p>
+              <p class="text-xs text-teal-600">GRH</p>
             </div>
-            <div class="text-center p-3 bg-gray-50 rounded-lg">
-              <p class="text-2xl font-bold text-gray-600">{{ stats.employeeCount }}</p>
-              <p class="text-xs text-gray-500">Employés</p>
+            <div class="rounded-lg border border-slate-200 p-3 text-center">
+              <p class="text-2xl font-bold text-slate-600">{{ stats.employeeCount }}</p>
+              <p class="text-xs text-slate-500">Employés</p>
             </div>
           </div>
         </div>
       </div>
-
     </div>
 
-    <!-- DÉPARTEMENTS ──────────────────────────────────────────────────────── -->
-    <div class="border rounded-xl p-4 bg-white">
-      <h2 class="text-base font-semibold mb-4 flex items-center gap-2">
-        <Users class="h-5 w-5 text-gray-500" />
+    <!-- DÉPARTEMENTS -->
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 class="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-900">
+        <Users class="h-4 w-4 text-slate-400" />
         Effectif par département
       </h2>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
         <div
           v-for="dept in personnelStore.byDepartment.slice(0, 8)"
           :key="dept.dept"
-          class="p-4 border rounded-lg hover:shadow-sm transition"
+          class="rounded-lg border border-slate-200 p-4 transition hover:border-teal-200 hover:bg-teal-50/30"
         >
-          <p class="text-2xl font-bold text-gray-900">{{ dept.count }}</p>
-          <p class="text-sm text-gray-500 truncate">{{ dept.dept }}</p>
+          <p class="text-2xl font-bold text-slate-900">{{ dept.count }}</p>
+          <p class="mt-0.5 truncate text-sm text-slate-500">{{ dept.dept }}</p>
         </div>
       </div>
     </div>

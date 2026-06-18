@@ -181,7 +181,7 @@ const handlePasswordChange = async () => {
         <!-- PROFILE HEADER -->
         <div class="pb-6 border-b mb-6">
           <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+            <div class="w-16 h-16 bg-teal-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
               {{ form.name.charAt(0).toUpperCase() }}
             </div>
             <div>
@@ -229,12 +229,12 @@ const handlePasswordChange = async () => {
           </div>
 
           <!-- ADMIN ONLY INFO BOX -->
-          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <div class="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-4">
             <div class="flex items-start gap-3">
-              <div class="text-blue-600 text-xl flex-shrink-0">🔒</div>
+              <div class="text-teal-600 text-xl flex-shrink-0">🔒</div>
               <div>
-                <p class="font-semibold text-blue-900 text-sm">Champs gérés par l'administrateur</p>
-                <p class="text-blue-700 text-xs mt-1">
+                <p class="font-semibold text-teal-900 text-sm">Champs gérés par l'administrateur</p>
+                <p class="text-teal-700 text-xs mt-1">
                   Votre département et votre poste sont configurés par l'administrateur du système.
                   Pour toute modification, veuillez contacter votre responsable RH.
                 </p>
@@ -365,9 +365,9 @@ const handlePasswordChange = async () => {
 
       <!-- PROFILE INFO CARDS -->
       <div class="grid gap-4 md:grid-cols-3">
-        <div class="border rounded-lg p-4 bg-blue-50">
-          <p class="text-sm text-blue-600 font-medium">Statut</p>
-          <p class="text-lg font-semibold text-blue-900 mt-2">{{ profileData?.status === 'actif' ? '✓ Actif' : '✗ Inactif' }}</p>
+        <div class="border rounded-lg p-4 bg-teal-50">
+          <p class="text-sm text-teal-600 font-medium">Statut</p>
+          <p class="text-lg font-semibold text-teal-900 mt-2">{{ profileData?.status === 'actif' ? '✓ Actif' : '✗ Inactif' }}</p>
         </div>
 
         <div class="border rounded-lg p-4 bg-green-50">

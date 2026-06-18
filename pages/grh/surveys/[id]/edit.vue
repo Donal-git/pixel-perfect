@@ -171,7 +171,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
       <p class="mt-1 text-sm text-gray-500">Ce sondage n'existe pas ou a été supprimé.</p>
       <NuxtLink
         to="/grh/surveys"
-        class="mt-6 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        class="mt-6 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
       >
         Retour aux sondages
       </NuxtLink>
@@ -205,7 +205,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
             v-model="title"
             type="text"
             placeholder="Ex : Satisfaction des employés Q2 2024"
-            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
           />
         </div>
 
@@ -215,7 +215,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
             v-model="description"
             placeholder="Décrivez l'objectif de ce sondage..."
             rows="3"
-            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none"
+            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 resize-none"
           />
         </div>
 
@@ -223,7 +223,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
           <input
             type="checkbox"
             v-model="isAnonymous"
-            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
           />
           <div>
             <p class="text-sm font-medium text-gray-800">Réponses anonymes</p>
@@ -240,7 +240,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
           <input
             v-model="closesAt"
             type="date"
-            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
           />
           <p class="mt-1 text-xs text-gray-400">Le sondage sera automatiquement fermé aux employés après cette date.</p>
         </div>
@@ -251,7 +251,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
         <div class="flex items-center justify-between">
           <h2 class="text-base font-semibold text-gray-800 flex items-center gap-2">
             Questions
-            <span class="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-600">
+            <span class="rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600">
               {{ questions.length }}
             </span>
             <span v-if="questionsLocked" class="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
@@ -277,7 +277,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
                   type="checkbox"
                   v-model="question.is_required"
                   :disabled="questionsLocked"
-                  class="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
+                  class="h-3.5 w-3.5 rounded border-gray-300 text-teal-600"
                 />
                 Obligatoire
               </label>
@@ -297,7 +297,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
               type="text"
               :placeholder="`Saisissez votre question ${index + 1}...`"
               :disabled="questionsLocked"
-              :class="questionsLocked ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'focus:border-blue-400 focus:ring-2 focus:ring-blue-100'"
+              :class="questionsLocked ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'focus:border-teal-400 focus:ring-2 focus:ring-teal-100'"
               class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium outline-none transition"
             />
 
@@ -305,7 +305,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
               v-model="question.question_type"
               @change="onTypeChange(question)"
               :disabled="questionsLocked"
-              :class="questionsLocked ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'focus:border-blue-400 focus:ring-2 focus:ring-blue-100'"
+              :class="questionsLocked ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'focus:border-teal-400 focus:ring-2 focus:ring-teal-100'"
               class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition bg-white"
             >
               <option v-for="(label, key) in questionTypeLabels" :key="key" :value="key">
@@ -342,7 +342,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
                   v-model="question.options[i]"
                   type="text"
                   :placeholder="`Option ${i + 1}`"
-                  class="flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  class="flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
                 />
                 <button
                   @click="removeOption(question, i)"
@@ -353,7 +353,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
               </div>
               <button
                 @click="addOption(question)"
-                class="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700"
+                class="flex items-center gap-1.5 text-xs text-teal-600 hover:text-teal-700"
               >
                 <Plus class="h-3.5 w-3.5" />
                 Ajouter une option
@@ -365,7 +365,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
         <button
           v-if="!questionsLocked"
           @click="addQuestion"
-          class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 py-4 text-sm font-medium text-gray-500 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+          class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 py-4 text-sm font-medium text-gray-500 transition hover:border-teal-400 hover:bg-teal-50 hover:text-teal-600"
         >
           <Plus class="h-4 w-4" />
           Ajouter une question
@@ -383,7 +383,7 @@ const handleSave = async (status?: 'draft' | 'active') => {
         <button
           @click="handleSave()"
           :disabled="loading"
-          class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
+          class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-teal-700 disabled:opacity-50"
         >
           <svg v-if="loading" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />

@@ -179,7 +179,7 @@ const handleSave = async (status: 'draft' | 'active') => {
     <!-- ─── ÉTAPE 1 — INFORMATIONS GÉNÉRALES ────────────────────────────── -->
     <div class="rounded-xl border bg-white p-6 shadow-sm space-y-5">
       <div class="flex items-center gap-2 border-b pb-3">
-        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">1</span>
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-600 text-xs font-bold text-white">1</span>
         <h2 class="text-base font-semibold text-gray-800">Informations générales</h2>
       </div>
 
@@ -192,7 +192,7 @@ const handleSave = async (status: 'draft' | 'active') => {
           v-model="title"
           type="text"
           placeholder="Ex : Satisfaction des employés — T2 2025"
-          class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
         />
       </div>
 
@@ -206,7 +206,7 @@ const handleSave = async (status: 'draft' | 'active') => {
           v-model="description"
           placeholder="Décrivez brièvement l'objectif de ce sondage..."
           rows="3"
-          class="w-full resize-none rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          class="w-full resize-none rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
         />
       </div>
 
@@ -216,7 +216,7 @@ const handleSave = async (status: 'draft' | 'active') => {
           <input
             type="checkbox"
             v-model="isAnonymous"
-            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
           />
           <div>
             <p class="text-sm font-medium text-gray-800">Réponses anonymes</p>
@@ -233,7 +233,7 @@ const handleSave = async (status: 'draft' | 'active') => {
             v-model="closesAt"
             type="date"
             :min="new Date().toISOString().split('T')[0]"
-            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
           />
           <p class="mt-1 text-xs text-gray-400">Le sondage se fermera automatiquement à cette date.</p>
         </div>
@@ -243,7 +243,7 @@ const handleSave = async (status: 'draft' | 'active') => {
     <!-- ─── ÉTAPE 2 — DÉPARTEMENTS DESTINATAIRES ────────────────────────── -->
     <div class="rounded-xl border bg-white p-6 shadow-sm space-y-5">
       <div class="flex items-center gap-2 border-b pb-3">
-        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">2</span>
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-600 text-xs font-bold text-white">2</span>
         <h2 class="text-base font-semibold text-gray-800">Départements destinataires</h2>
         <span class="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">
           Requis pour publier
@@ -260,26 +260,26 @@ const handleSave = async (status: 'draft' | 'active') => {
         @click="toggleAll"
         class="flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition"
         :class="allSelected
-          ? 'border-blue-400 bg-blue-50'
-          : 'border-dashed border-gray-300 hover:border-blue-300 hover:bg-gray-50'"
+          ? 'border-teal-400 bg-teal-50'
+          : 'border-dashed border-gray-300 hover:border-teal-300 hover:bg-gray-50'"
       >
         <div
           class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition"
-          :class="allSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-400'"
+          :class="allSelected ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-400'"
         >
           <CheckSquare class="h-4 w-4" />
         </div>
         <div class="flex-1">
-          <p class="text-sm font-semibold" :class="allSelected ? 'text-blue-700' : 'text-gray-700'">
+          <p class="text-sm font-semibold" :class="allSelected ? 'text-teal-700' : 'text-gray-700'">
             Tous les départements
           </p>
-          <p class="text-xs" :class="allSelected ? 'text-blue-500' : 'text-gray-400'">
+          <p class="text-xs" :class="allSelected ? 'text-teal-500' : 'text-gray-400'">
             Envoyer à l'ensemble des {{ DEPARTMENTS.length }} départements
           </p>
         </div>
         <span
           class="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold"
-          :class="allSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'"
+          :class="allSelected ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-500'"
         >
           {{ DEPARTMENTS.length }}
         </span>
@@ -294,28 +294,28 @@ const handleSave = async (status: 'draft' | 'active') => {
           @click="toggleDepartment(dept)"
           class="group relative flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all"
           :class="selectedDepartments.includes(dept)
-            ? 'border-blue-400 bg-blue-50 shadow-sm'
-            : 'border-gray-200 bg-white hover:border-blue-200 hover:bg-gray-50'"
+            ? 'border-teal-400 bg-teal-50 shadow-sm'
+            : 'border-gray-200 bg-white hover:border-teal-200 hover:bg-teal-50/30'"
         >
           <!-- Indicateur de sélection -->
           <span
             class="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold transition"
             :class="selectedDepartments.includes(dept)
-              ? 'bg-blue-500 text-white'
+              ? 'bg-teal-500 text-white'
               : 'border border-gray-300 bg-white text-transparent'"
           >✓</span>
 
           <!-- Avatar département -->
           <div
             class="flex h-10 w-10 items-center justify-center rounded-xl text-base font-bold text-white transition"
-            :class="selectedDepartments.includes(dept) ? 'bg-blue-500' : 'bg-gray-300'"
+            :class="selectedDepartments.includes(dept) ? 'bg-teal-500' : 'bg-gray-300'"
           >
             {{ dept[0] }}
           </div>
 
           <span
             class="text-xs font-medium leading-tight"
-            :class="selectedDepartments.includes(dept) ? 'text-blue-700' : 'text-gray-600'"
+            :class="selectedDepartments.includes(dept) ? 'text-teal-700' : 'text-gray-600'"
           >
             {{ dept }}
           </span>
@@ -326,7 +326,7 @@ const handleSave = async (status: 'draft' | 'active') => {
       <div
         class="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm"
         :class="selectedDepartments.length > 0
-          ? 'bg-blue-50 text-blue-700'
+          ? 'bg-teal-50 text-teal-700'
           : 'bg-amber-50 text-amber-700'"
       >
         <Users class="h-4 w-4 shrink-0" />
@@ -345,10 +345,10 @@ const handleSave = async (status: 'draft' | 'active') => {
     <div class="space-y-4">
       <div class="flex items-center gap-3">
         <div class="flex items-center gap-2">
-          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">3</span>
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-600 text-xs font-bold text-white">3</span>
           <h2 class="text-base font-semibold text-gray-800">Questions</h2>
         </div>
-        <span class="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-600">
+        <span class="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-600">
           {{ questions.length }} question{{ questions.length > 1 ? 's' : '' }}
         </span>
       </div>
@@ -368,7 +368,7 @@ const handleSave = async (status: 'draft' | 'active') => {
               <input
                 type="checkbox"
                 v-model="question.is_required"
-                class="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
+                class="h-3.5 w-3.5 rounded border-gray-300 text-teal-600"
               />
               Obligatoire
             </label>
@@ -387,13 +387,13 @@ const handleSave = async (status: 'draft' | 'active') => {
             v-model="question.question_text"
             type="text"
             :placeholder="`Saisissez la question ${index + 1}...`"
-            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
           />
 
           <select
             v-model="question.question_type"
             @change="onTypeChange(question)"
-            class="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            class="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
           >
             <option v-for="(label, key) in questionTypeLabels" :key="key" :value="key">
               {{ label }}
@@ -437,7 +437,7 @@ const handleSave = async (status: 'draft' | 'active') => {
                 v-model="question.options[i]"
                 type="text"
                 :placeholder="`Option ${i + 1}`"
-                class="flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                class="flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
               <button
                 @click="removeOption(question, i)"
@@ -448,7 +448,7 @@ const handleSave = async (status: 'draft' | 'active') => {
             </div>
             <button
               @click="addOption(question)"
-              class="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700"
+              class="flex items-center gap-1.5 text-xs font-medium text-teal-600 hover:text-teal-700"
             >
               <Plus class="h-3.5 w-3.5" /> Ajouter une option
             </button>
@@ -459,7 +459,7 @@ const handleSave = async (status: 'draft' | 'active') => {
       <!-- Ajouter une question -->
       <button
         @click="addQuestion"
-        class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 py-4 text-sm font-medium text-gray-500 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
+        class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 py-4 text-sm font-medium text-gray-500 transition hover:border-teal-400 hover:bg-teal-50 hover:text-teal-600"
       >
         <Plus class="h-4 w-4" />
         Ajouter une question
@@ -490,7 +490,7 @@ const handleSave = async (status: 'draft' | 'active') => {
         <button
           @click="handleSave('active')"
           :disabled="loading"
-          class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+          class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700 disabled:opacity-50"
           :title="selectedDepartments.length === 0 ? 'Sélectionnez au moins un département' : ''"
         >
           <svg v-if="loading" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">

@@ -73,7 +73,7 @@ const statusRows = computed(() => [
       <p class="mt-3 text-sm font-medium text-gray-500">Aucun sondage créé</p>
       <NuxtLink
         to="/grh/surveys/create"
-        class="mt-3 text-xs text-blue-600 underline hover:text-blue-700"
+        class="mt-3 text-xs text-teal-600 underline hover:text-teal-700"
       >
         Créer votre premier sondage →
       </NuxtLink>
@@ -122,10 +122,10 @@ const statusRows = computed(() => [
       <!-- Taux de participation moyen -->
       <div
         v-if="synthesis.avgParticipation > 0"
-        class="mt-4 flex items-center justify-between rounded-lg bg-blue-50 px-4 py-3"
+        class="mt-4 flex items-center justify-between rounded-lg bg-teal-50 px-4 py-3"
       >
-        <span class="text-sm font-medium text-blue-800">Participation estimée globale</span>
-        <span class="text-lg font-bold text-blue-700">{{ synthesis.avgParticipation }}%</span>
+        <span class="text-sm font-medium text-teal-800">Participation estimée globale</span>
+        <span class="text-lg font-bold text-teal-700">{{ synthesis.avgParticipation }}%</span>
       </div>
     </template>
 

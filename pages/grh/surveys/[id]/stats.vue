@@ -188,14 +188,14 @@ const statusConfig: Record<string, { label: string; class: string }> = {
 
     <!-- LOADING -->
     <div v-if="loading" class="flex items-center justify-center py-24">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-teal-600 border-t-transparent" />
     </div>
 
     <!-- ERREUR -->
     <div v-else-if="hasError || !survey" class="flex flex-col items-center justify-center rounded-xl border bg-white py-16 text-center">
       <AlertCircle class="h-12 w-12 text-red-400" />
       <p class="mt-4 text-sm font-medium text-gray-900">Sondage introuvable</p>
-      <NuxtLink :to="backPath" class="mt-4 text-sm text-blue-600 hover:underline">Retour à la liste</NuxtLink>
+      <NuxtLink :to="backPath" class="mt-4 text-sm text-teal-600 hover:underline">Retour à la liste</NuxtLink>
     </div>
 
     <template v-else>
@@ -204,8 +204,8 @@ const statusConfig: Record<string, { label: string; class: string }> = {
       <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div class="rounded-xl border bg-white p-5 shadow-sm">
           <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
-              <Users class="h-5 w-5 text-blue-600" />
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-50">
+              <Users class="h-5 w-5 text-teal-600" />
             </div>
             <div>
               <p class="text-2xl font-bold text-gray-900">{{ submitted.length }}</p>
@@ -267,7 +267,7 @@ const statusConfig: Record<string, { label: string; class: string }> = {
           <span
             v-for="dept in survey.sent_to"
             :key="dept"
-            class="rounded-md bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700"
+            class="rounded-md bg-teal-50 px-3 py-1 text-sm font-medium text-teal-700"
           >{{ dept }}</span>
         </div>
       </div>
@@ -286,7 +286,7 @@ const statusConfig: Record<string, { label: string; class: string }> = {
             </span>
             <div class="flex-1 overflow-hidden rounded-full bg-gray-100" style="height: 18px;">
               <div
-                class="h-full rounded-full bg-blue-500 transition-all duration-700"
+                class="h-full rounded-full bg-teal-500 transition-all duration-700"
                 :style="{ width: (submitted.length > 0 ? Math.round((item.count / submitted.length) * 100) : 0) + '%' }"
               />
             </div>
@@ -359,7 +359,7 @@ const statusConfig: Record<string, { label: string; class: string }> = {
               </span>
               <div class="flex-1 overflow-hidden rounded-full bg-gray-100" style="height: 20px;">
                 <div
-                  class="h-full rounded-full bg-blue-500 transition-all duration-700"
+                  class="h-full rounded-full bg-teal-500 transition-all duration-700"
                   :style="{ width: opt.barWidth + '%' }"
                 />
               </div>

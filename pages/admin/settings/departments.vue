@@ -136,7 +136,7 @@ const deptColors = (name: string) => {
     'from-violet-500 to-purple-600',
     'from-pink-500 to-rose-600',
     'from-green-500 to-emerald-600',
-    'from-cyan-500 to-blue-600',
+    'from-cyan-500 to-teal-600',
     'from-orange-500 to-amber-600',
     'from-amber-500 to-yellow-600',
     'from-rose-500 to-pink-600',
@@ -166,7 +166,7 @@ const formatDate = (dateStr: string) =>
       </div>
       <button
         @click="openCreateModal"
-        class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
+        class="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all"
       >
         <Plus class="w-5 h-5" />
         Nouveau département
@@ -199,7 +199,7 @@ const formatDate = (dateStr: string) =>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             <button
               @click="openEditModal(dept)"
-              class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+              class="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition"
               title="Modifier"
             >
               <Edit3 class="w-4 h-4" />
@@ -276,8 +276,8 @@ const formatDate = (dateStr: string) =>
             <!-- En-tête -->
             <div class="flex items-center justify-between border-b px-6 py-4">
               <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Building2 class="h-5 w-5 text-blue-600" />
+                <div class="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center">
+                  <Building2 class="h-5 w-5 text-teal-600" />
                 </div>
                 <h3 class="text-lg font-bold text-gray-900">Nouveau département</h3>
               </div>
@@ -297,7 +297,7 @@ const formatDate = (dateStr: string) =>
                   v-model="newDeptName"
                   type="text"
                   placeholder="Ex: Ressources Humaines"
-                  class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
                   autofocus
                 />
               </div>
@@ -318,8 +318,8 @@ const formatDate = (dateStr: string) =>
                     role="switch"
                     :aria-checked="newDeptStatus === 'active'"
                     @click="newDeptStatus = newDeptStatus === 'active' ? 'inactive' : 'active'"
-                    class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    :class="newDeptStatus === 'active' ? 'bg-blue-600' : 'bg-gray-200'"
+                    class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                    :class="newDeptStatus === 'active' ? 'bg-teal-600' : 'bg-gray-200'"
                   >
                     <span
                       class="inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200"
@@ -329,7 +329,7 @@ const formatDate = (dateStr: string) =>
 
                   <span
                     class="text-sm transition-colors"
-                    :class="newDeptStatus === 'active' ? 'text-blue-600 font-medium' : 'text-gray-400'"
+                    :class="newDeptStatus === 'active' ? 'text-teal-600 font-medium' : 'text-gray-400'"
                   >
                     Actif
                   </span>
@@ -347,7 +347,7 @@ const formatDate = (dateStr: string) =>
               </button>
               <button
                 @click="handleCreate"
-                class="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+                class="flex-1 rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-700"
               >
                 Créer
               </button>
@@ -370,8 +370,8 @@ const formatDate = (dateStr: string) =>
             <!-- En-tête -->
             <div class="flex items-center justify-between border-b px-6 py-4">
               <div class="flex items-center gap-3">
-                <div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Edit3 class="h-5 w-5 text-blue-600" />
+                <div class="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center">
+                  <Edit3 class="h-5 w-5 text-teal-600" />
                 </div>
                 <h3 class="text-lg font-bold text-gray-900">Modifier le département</h3>
               </div>
@@ -390,7 +390,7 @@ const formatDate = (dateStr: string) =>
                 <input
                   v-model="editDeptName"
                   type="text"
-                  class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
                   autofocus
                 />
               </div>
@@ -411,8 +411,8 @@ const formatDate = (dateStr: string) =>
                     role="switch"
                     :aria-checked="editDeptStatus === 'active'"
                     @click="editDeptStatus = editDeptStatus === 'active' ? 'inactive' : 'active'"
-                    class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    :class="editDeptStatus === 'active' ? 'bg-blue-600' : 'bg-gray-200'"
+                    class="relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                    :class="editDeptStatus === 'active' ? 'bg-teal-600' : 'bg-gray-200'"
                   >
                     <span
                       class="inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200"
@@ -422,7 +422,7 @@ const formatDate = (dateStr: string) =>
 
                   <span
                     class="text-sm transition-colors"
-                    :class="editDeptStatus === 'active' ? 'text-blue-600 font-medium' : 'text-gray-400'"
+                    :class="editDeptStatus === 'active' ? 'text-teal-600 font-medium' : 'text-gray-400'"
                   >
                     Actif
                   </span>
@@ -440,7 +440,7 @@ const formatDate = (dateStr: string) =>
               </button>
               <button
                 @click="handleEdit"
-                class="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+                class="flex-1 rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-700"
               >
                 Enregistrer
               </button>

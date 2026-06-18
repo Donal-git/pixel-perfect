@@ -45,7 +45,7 @@ const formatDate = (d: string) =>
       <div class="flex items-center gap-2">
         <NuxtLink
           to="/grh/surveys"
-          class="text-xs text-blue-600 hover:text-blue-700 hover:underline"
+          class="text-xs text-teal-600 hover:text-teal-700 hover:underline"
         >
           Voir tous →
         </NuxtLink>
@@ -64,7 +64,7 @@ const formatDate = (d: string) =>
       <p class="mt-1 text-xs text-gray-400">Commencez par créer votre premier sondage</p>
       <NuxtLink
         to="/grh/surveys/create"
-        class="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+        class="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-teal-700"
       >
         <Plus class="h-3.5 w-3.5" />
         Créer un sondage
@@ -101,7 +101,7 @@ const formatDate = (d: string) =>
             <span>{{ survey.questions.length }} question{{ survey.questions.length > 1 ? 's' : '' }}</span>
             <template v-if="survey.sent_to.length > 0">
               <span>·</span>
-              <span class="max-w-[160px] truncate text-blue-500">
+              <span class="max-w-[160px] truncate text-teal-500">
                 {{ survey.sent_to.join(', ') }}
               </span>
             </template>
@@ -120,7 +120,7 @@ const formatDate = (d: string) =>
         <div class="flex shrink-0 items-center gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
           <NuxtLink
             :to="`/grh/surveys/${survey.id}/edit`"
-            class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+            class="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:border-teal-200 hover:bg-teal-50 hover:text-teal-600"
             title="Modifier"
           >
             <Pencil class="h-3.5 w-3.5" />
@@ -140,7 +140,7 @@ const formatDate = (d: string) =>
     <div v-if="surveys.length > 0" class="border-t px-5 py-3">
       <NuxtLink
         to="/grh/surveys/create"
-        class="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-700"
+        class="flex items-center gap-2 text-sm font-medium text-teal-600 hover:text-teal-700"
       >
         <Plus class="h-4 w-4" />
         Créer un nouveau sondage

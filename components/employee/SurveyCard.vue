@@ -37,7 +37,7 @@ const statusLabel = computed(() => {
         <span v-else class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
           En attente de réponse
         </span>
-        <span v-if="survey.isAnonymous" class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+        <span v-if="survey.isAnonymous" class="text-xs bg-teal-50 text-teal-700 px-2 py-1 rounded">
           👤 Anonyme
         </span>
         <span :class="statusClass">{{ statusLabel }}</span>

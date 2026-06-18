@@ -29,7 +29,7 @@ const { toasts, dismiss } = useToast()
           />
           <Info
             v-else
-            class="mt-0.5 h-5 w-5 shrink-0 text-blue-500"
+            class="mt-0.5 h-5 w-5 shrink-0 text-teal-500"
           />
 
           <div class="flex-1 min-w-0">

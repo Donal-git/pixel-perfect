@@ -19,7 +19,7 @@ const variantClass = computed(() => {
     case 'destructive':
       return 'bg-red-100 text-red-700'
     default:
-      return 'bg-blue-100 text-blue-700'
+      return 'bg-teal-50 text-teal-700'
   }
 })
 </script>

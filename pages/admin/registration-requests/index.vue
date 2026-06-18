@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import {
   UserPlus, CheckCircle2, XCircle, Clock, Users,
-  Search, ChevronDown, Loader2
+  Search, Loader2
 } from 'lucide-vue-next'
 import { useRegistrationRequestStore, type RegistrationRequest } from '~/stores/registrationRequest'
 import { useToast } from '~/composables/useToast'
@@ -152,7 +152,7 @@ const FILTERS: { key: typeof activeFilter.value; label: string }[] = [
           @click="activeFilter = f.key"
           class="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition"
           :class="activeFilter === f.key
-            ? 'bg-blue-600 text-white shadow-sm'
+            ? 'bg-teal-600 text-white shadow-sm'
             : 'text-gray-600 hover:bg-gray-100'"
         >
           {{ f.label }}
@@ -169,7 +169,7 @@ const FILTERS: { key: typeof activeFilter.value; label: string }[] = [
           v-model="search"
           type="text"
           placeholder="Rechercher…"
-          class="rounded-lg border border-gray-200 bg-white pl-9 pr-4 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          class="rounded-lg border border-gray-200 bg-white pl-9 pr-4 py-2 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
         />
       </div>
     </div>
@@ -179,7 +179,7 @@ const FILTERS: { key: typeof activeFilter.value; label: string }[] = [
 
       <!-- Chargement -->
       <div v-if="store.loading" class="flex items-center justify-center py-16">
-        <div class="h-7 w-7 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+        <div class="h-7 w-7 animate-spin rounded-full border-4 border-teal-500 border-t-transparent" />
       </div>
 
       <!-- Vide -->
@@ -212,7 +212,7 @@ const FILTERS: { key: typeof activeFilter.value; label: string }[] = [
               <!-- Candidat -->
               <td class="px-4 py-4">
                 <div class="flex items-center gap-3">
-                  <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-600">
+                  <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-50 text-sm font-semibold text-teal-600">
                     {{ req.fullName?.[0]?.toUpperCase() }}
                   </div>
                   <div>

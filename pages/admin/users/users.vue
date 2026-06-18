@@ -104,7 +104,7 @@ const formatDate = (d: string) =>
 
 const roleConfig = {
   admin: { label: 'Admin', class: 'bg-red-100 text-red-700 border-red-200' },
-  grh: { label: 'GRH', class: 'bg-blue-100 text-blue-700 border-blue-200' },
+  grh: { label: 'GRH', class: 'bg-teal-50 text-teal-700 border-teal-200' },
   employee: { label: 'Employé', class: 'bg-gray-100 text-gray-600 border-gray-200' }
 }
 
@@ -121,7 +121,7 @@ const deptColors: Record<string, string> = {
 
 const avatarColor = (name: string) => {
   const colors = [
-    'bg-blue-500', 'bg-purple-500', 'bg-green-500', 'bg-rose-500',
+    'bg-teal-500', 'bg-slate-500', 'bg-green-500', 'bg-rose-500',
     'bg-amber-500', 'bg-cyan-500', 'bg-indigo-500', 'bg-teal-500'
   ]
   let h = 0
@@ -281,7 +281,7 @@ onUnmounted(() => {
       </div>
       <button
         @click="openCreateModal"
-        class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+        class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700"
       >
         <Plus class="h-4 w-4" />
         Nouveau membre
@@ -291,8 +291,8 @@ onUnmounted(() => {
     <!-- KPI CARDS ───────────────────────────────────────────────────────── -->
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
       <div class="rounded-xl border bg-white p-4 shadow-sm">
-        <div class="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
-          <Users class="h-4 w-4 text-blue-600" />
+        <div class="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100">
+          <Users class="h-4 w-4 text-slate-600" />
         </div>
         <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
         <p class="mt-0.5 text-xs text-gray-500">Total</p>
@@ -305,10 +305,10 @@ onUnmounted(() => {
         <p class="mt-0.5 text-xs text-gray-500">Admins</p>
       </div>
       <div class="rounded-xl border bg-white p-4 shadow-sm">
-        <div class="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
-          <UserCog class="h-4 w-4 text-blue-600" />
+        <div class="mb-2 flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50">
+          <UserCog class="h-4 w-4 text-teal-600" />
         </div>
-        <p class="text-2xl font-bold text-blue-700">{{ stats.grh }}</p>
+        <p class="text-2xl font-bold text-teal-700">{{ stats.grh }}</p>
         <p class="mt-0.5 text-xs text-gray-500">GRH</p>
       </div>
       <div class="rounded-xl border bg-white p-4 shadow-sm">
@@ -328,12 +328,12 @@ onUnmounted(() => {
           v-model="searchQuery"
           type="text"
           placeholder="Rechercher par nom, email, poste..."
-          class="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          class="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
         />
       </div>
       <select
         v-model="roleFilter"
-        class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+        class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white"
       >
         <option value="">Tous les rôles</option>
         <option value="admin">Admin</option>
@@ -342,7 +342,7 @@ onUnmounted(() => {
       </select>
       <select
         v-model="statusFilter"
-        class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+        class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white"
       >
         <option value="">Tous les statuts</option>
         <option value="actif">Actif</option>
@@ -524,7 +524,7 @@ onUnmounted(() => {
             @click="currentPage = p"
             class="flex h-7 w-7 items-center justify-center rounded-lg border text-xs transition"
             :class="p === currentPage
-              ? 'border-blue-500 bg-blue-600 text-white'
+              ? 'border-teal-500 bg-teal-600 text-white'
               : 'border-gray-200 text-gray-600 hover:bg-gray-50'"
           >
             {{ p }}
@@ -560,29 +560,29 @@ onUnmounted(() => {
               <div class="grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Nom complet <span class="text-red-500">*</span></label>
-                  <input v-model="createForm.name" type="text" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" placeholder="Ex: Jean Kaboré" />
+                  <input v-model="createForm.name" type="text" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100" placeholder="Ex: Jean Kaboré" />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
-                  <input v-model="createForm.email" type="email" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" placeholder="email@entreprise.com" />
+                  <input v-model="createForm.email" type="email" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100" placeholder="email@entreprise.com" />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Téléphone</label>
-                  <input v-model="createForm.phone" type="tel" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" placeholder="+226 70 00 00 00" />
+                  <input v-model="createForm.phone" type="tel" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100" placeholder="+226 70 00 00 00" />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Département <span class="text-red-500">*</span></label>
-                  <select v-model="createForm.department" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+                  <select v-model="createForm.department" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
                     <option v-for="d in departments" :key="d" :value="d">{{ d }}</option>
                   </select>
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Poste <span class="text-red-500">*</span></label>
-                  <input v-model="createForm.position" type="text" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" placeholder="Ex: Développeur" />
+                  <input v-model="createForm.position" type="text" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100" placeholder="Ex: Développeur" />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Rôle</label>
-                  <select v-model="createForm.role" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+                  <select v-model="createForm.role" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
                     <option value="employee">Employé</option>
                     <option value="grh">GRH</option>
                     <option value="admin">Admin</option>
@@ -590,7 +590,7 @@ onUnmounted(() => {
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Statut</label>
-                  <select v-model="createForm.status" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+                  <select v-model="createForm.status" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
                     <option value="actif">Actif</option>
                     <option value="inactif">Inactif</option>
                   </select>
@@ -599,7 +599,7 @@ onUnmounted(() => {
             </div>
             <div class="flex gap-3 border-t px-6 py-4">
               <button @click="closeCreateModal" class="flex-1 rounded-lg border border-gray-200 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Annuler</button>
-              <button @click="handleCreate" class="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700">Ajouter</button>
+              <button @click="handleCreate" class="flex-1 rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-700">Ajouter</button>
             </div>
           </div>
         </div>
@@ -626,29 +626,29 @@ onUnmounted(() => {
               <div class="grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Nom complet <span class="text-red-500">*</span></label>
-                  <input v-model="editForm.name" type="text" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" />
+                  <input v-model="editForm.name" type="text" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100" />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Email <span class="text-red-500">*</span></label>
-                  <input v-model="editForm.email" type="email" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" />
+                  <input v-model="editForm.email" type="email" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100" />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Téléphone</label>
-                  <input v-model="editForm.phone" type="tel" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" />
+                  <input v-model="editForm.phone" type="tel" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100" />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Département <span class="text-red-500">*</span></label>
-                  <select v-model="editForm.department" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+                  <select v-model="editForm.department" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
                     <option v-for="d in departments" :key="d" :value="d">{{ d }}</option>
                   </select>
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Poste <span class="text-red-500">*</span></label>
-                  <input v-model="editForm.position" type="text" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100" />
+                  <input v-model="editForm.position" type="text" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100" />
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Rôle</label>
-                  <select v-model="editForm.role" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+                  <select v-model="editForm.role" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
                     <option value="employee">Employé</option>
                     <option value="grh">GRH</option>
                     <option value="admin">Admin</option>
@@ -656,7 +656,7 @@ onUnmounted(() => {
                 </div>
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Statut</label>
-                  <select v-model="editForm.status" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white">
+                  <select v-model="editForm.status" class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white">
                     <option value="actif">Actif</option>
                     <option value="inactif">Inactif</option>
                   </select>
@@ -665,7 +665,7 @@ onUnmounted(() => {
             </div>
             <div class="flex gap-3 border-t px-6 py-4">
               <button @click="closeEditModal" class="flex-1 rounded-lg border border-gray-200 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50">Annuler</button>
-              <button @click="handleEdit" class="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white hover:bg-blue-700">Enregistrer</button>
+              <button @click="handleEdit" class="flex-1 rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white hover:bg-teal-700">Enregistrer</button>
             </div>
           </div>
         </div>

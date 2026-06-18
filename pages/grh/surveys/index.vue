@@ -156,7 +156,7 @@ const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
       </div>
       <NuxtLink
         to="/grh/surveys/create"
-        class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700"
       >
         <Plus class="h-4 w-4" />
         Nouveau sondage
@@ -168,7 +168,7 @@ const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
       <button
         @click="activeFilter = 'all'"
         class="rounded-xl border p-4 text-left transition hover:shadow-md"
-        :class="activeFilter === 'all' ? 'border-blue-500 bg-blue-50 shadow-sm' : 'bg-white'"
+        :class="activeFilter === 'all' ? 'border-teal-500 bg-teal-50 shadow-sm' : 'bg-white'"
       >
         <p class="text-xs font-medium text-gray-500">Total</p>
         <p class="mt-1 text-3xl font-bold text-gray-900">{{ stats.total }}</p>
@@ -229,7 +229,7 @@ const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
         <NuxtLink
           v-if="activeFilter === 'all'"
           to="/grh/surveys/create"
-          class="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          class="mt-4 inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
         >
           <Plus class="h-4 w-4" /> Créer un sondage
         </NuxtLink>
@@ -279,7 +279,7 @@ const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
                 <ClipboardList class="h-3 w-3" />
                 {{ survey.questions.length }} question{{ survey.questions.length > 1 ? 's' : '' }}
               </span>
-              <span v-if="survey.sent_to?.length > 0" class="flex items-center gap-1 text-blue-500">
+              <span v-if="survey.sent_to?.length > 0" class="flex items-center gap-1 text-teal-600">
                 <Users class="h-3 w-3" />
                 {{ survey.sent_to.join(', ') }}
               </span>
@@ -301,7 +301,7 @@ const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
             <NuxtLink
               v-if="survey.status !== 'draft'"
               :to="`/grh/surveys/${survey.id}/stats`"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-purple-200 bg-purple-50 px-3 py-1.5 text-xs font-medium text-purple-700 transition hover:bg-purple-100"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-100"
             >
               <BarChart3 class="h-3.5 w-3.5" />
               Résultats
@@ -309,7 +309,7 @@ const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
 
             <NuxtLink
               :to="`/grh/surveys/${survey.id}/edit`"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-600"
             >
               <Pencil class="h-3.5 w-3.5" />
               Modifier
@@ -318,7 +318,7 @@ const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
             <button
               v-if="!isSurveyExpired(survey)"
               @click="openSendModal(survey.id)"
-              class="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blue-700"
+              class="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-teal-700"
             >
               <Send class="h-3.5 w-3.5" />
               Envoyer
@@ -376,10 +376,10 @@ const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
                   :checked="selectedDepartments.length === DEPARTMENTS.length"
                   :indeterminate="selectedDepartments.length > 0 && selectedDepartments.length < DEPARTMENTS.length"
                   @change="toggleAllDepartments"
-                  class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                 />
                 <span class="text-sm font-semibold text-gray-800">Tous les départements</span>
-                <span class="ml-auto rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-600">
+                <span class="ml-auto rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">
                   {{ DEPARTMENTS.length }}
                 </span>
               </label>
@@ -391,18 +391,18 @@ const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
                   :key="dept"
                   class="flex cursor-pointer items-center gap-2.5 rounded-lg border p-3 transition hover:bg-gray-50"
                   :class="selectedDepartments.includes(dept)
-                    ? 'border-blue-400 bg-blue-50'
+                    ? 'border-teal-400 bg-teal-50'
                     : 'border-gray-200'"
                 >
                   <input
                     type="checkbox"
                     :checked="selectedDepartments.includes(dept)"
                     @change="toggleDepartment(dept)"
-                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    class="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                   />
                   <div
                     class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white"
-                    :class="selectedDepartments.includes(dept) ? 'bg-blue-500' : 'bg-gray-300'"
+                    :class="selectedDepartments.includes(dept) ? 'bg-teal-500' : 'bg-slate-300'"
                   >
                     {{ dept[0] }}
                   </div>
@@ -410,7 +410,7 @@ const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
                 </label>
               </div>
 
-              <p v-if="selectedDepartments.length > 0" class="mt-3 text-xs text-blue-600">
+              <p v-if="selectedDepartments.length > 0" class="mt-3 text-xs text-teal-600">
                 {{ selectedDepartments.length }} département{{ selectedDepartments.length > 1 ? 's' : '' }} sélectionné{{ selectedDepartments.length > 1 ? 's' : '' }}
               </p>
             </div>
@@ -426,7 +426,7 @@ const isSurveyExpired = (survey: any) => surveyStore.isSurveyExpired(survey)
               <button
                 @click="handleSendSurvey"
                 :disabled="selectedDepartments.length === 0 || sendingLoading"
-                class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                class="flex flex-1 items-center justify-center gap-2 rounded-lg bg-teal-600 py-2.5 text-sm font-medium text-white transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <svg v-if="sendingLoading" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />

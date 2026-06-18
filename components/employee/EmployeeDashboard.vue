@@ -1,54 +1,41 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import {
+  ClipboardList, GraduationCap, CheckCircle2, Clock,
+  BookOpen, User, ChevronRight, Calendar
+} from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useSurveyStore } from '~/stores/survey'
 import { useFormationStore } from '~/stores/formation'
 import { useRouter } from 'vue-router'
 
-// 🧭 Navigation
 const router = useRouter()
-
-// 📦 Stores
 const authStore = useAuthStore()
 const surveyStore = useSurveyStore()
 const formationStore = useFormationStore()
 
-// 👤 Current User
 const currentUser = computed(() => authStore.user)
 
-// 📊 Data
 const surveys = ref<any[]>([])
 const formations = ref<any[]>([])
 const myFormations = ref<any[]>([])
 const respondedSurveys = ref<Set<string>>(new Set())
-
-// Loading state
 const loading = ref(true)
 
-// 🔄 Fetch data on mount
 onMounted(async () => {
   loading.value = true
   try {
-    // Load stores
     await Promise.all([
       surveyStore.loadFromStorage(),
       surveyStore.loadResponsesFromStorage(),
       formationStore.loadFromStorage(),
       formationStore.loadRegistrationsFromStorage()
     ])
-
-    // Sondages filtrés par département de l'employé
     const dept = currentUser.value?.department as string | undefined
     surveys.value = surveyStore.getSurveysForDepartment(dept)
-
-    // Formations filtrées par département de l'employé
     formations.value = formationStore.getFormationsForDepartment(dept)
-
-    // Get employee's registered formations
     if (currentUser.value?.id) {
       myFormations.value = await formationStore.getEmployeeFormations(currentUser.value.id)
-
-      // Check which surveys have been answered
       surveys.value.forEach((survey) => {
         if (surveyStore.hasEmployeeResponded(survey.id, currentUser.value!.id)) {
           respondedSurveys.value.add(survey.id)
@@ -62,48 +49,28 @@ onMounted(async () => {
   }
 })
 
-// 📝 Navigate to survey response
-const goToSurvey = (surveyId: string) => {
-  router.push(`/surveys/${surveyId}/response`)
-}
+const goToSurvey = (surveyId: string) => router.push(`/surveys/${surveyId}/response`)
+const goToMySurveys = () => router.push('/employee/surveys')
+const goToProfile = () => router.push('/employee/profile')
 
-// 📚 Register for formation
 const registerForFormation = async (formationId: string) => {
   if (currentUser.value?.id) {
     try {
       await formationStore.registerForFormation(formationId, currentUser.value.id)
       myFormations.value = await formationStore.getEmployeeFormations(currentUser.value.id)
-    } catch (error) {
-      console.error('Erreur inscription formation:', error)
-    }
+    } catch (error) { console.error('Erreur inscription formation:', error) }
   }
 }
 
-// 📚 Unregister from formation
 const unregisterFromFormation = async (formationId: string) => {
   if (currentUser.value?.id) {
     try {
       await formationStore.unregisterFromFormation(formationId, currentUser.value.id)
       myFormations.value = await formationStore.getEmployeeFormations(currentUser.value.id)
-    } catch (error) {
-      console.error('Erreur désinscription formation:', error)
-    }
+    } catch (error) { console.error('Erreur désinscription formation:', error) }
   }
 }
 
-// 👤 Navigate to profile
-const goToProfile = () => {
-  if (currentUser.value?.id) {
-    router.push(`/employee/profile`)
-  }
-}
-
-// 📋 Navigate to my surveys
-const goToMySurveys = () => {
-  router.push('/employee/surveys')
-}
-
-// 📊 Computed stats
 const stats = computed(() => ({
   surveysPending: surveys.value.filter(s => !respondedSurveys.value.has(s.id)).length,
   surveysCompleted: respondedSurveys.value.size,
@@ -112,12 +79,9 @@ const stats = computed(() => ({
   formationsAvailable: formations.value.length
 }))
 
-// Check if employee is registered
-const isRegisteredForFormation = (formationId: string) => {
-  return myFormations.value.some((formation) => formation.id === formationId)
-}
+const isRegisteredForFormation = (formationId: string) =>
+  myFormations.value.some((f) => f.id === formationId)
 
-// Check if registration is closed (end_date is in the past)
 const isFormationExpired = (formation: any) => {
   if (!formation.end_date) return false
   return new Date(formation.end_date) < new Date()
@@ -127,133 +91,134 @@ const formatDate = (dateStr?: string) => {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
 }
+
+const levelClass = (level: string) => ({
+  'débutant':      'bg-emerald-50 text-emerald-700',
+  'intermédiaire': 'bg-amber-50 text-amber-700',
+  'avancé':        'bg-red-50 text-red-700',
+}[level] ?? 'bg-slate-100 text-slate-600')
 </script>
 
 <template>
-  <div class="space-y-6 animate-fade-in">
+  <div class="space-y-6">
+
     <!-- HEADER -->
-    <div class="flex justify-between items-start">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-3xl font-bold text-foreground">Mon Espace Employé</h1>
-        <p class="text-muted-foreground mt-1">
-          Bienvenue {{ currentUser?.name }}, gérez vos sondages et formations
+        <h1 class="text-2xl font-bold text-slate-900">Mon Espace</h1>
+        <p class="mt-1 text-sm text-slate-500">
+          Bienvenue {{ currentUser?.name || currentUser?.email }} — {{ currentUser?.department || 'Employé' }}
         </p>
       </div>
       <div class="flex gap-2">
         <button
           @click="goToMySurveys"
-          class="px-4 py-2 border rounded-lg hover:bg-accent transition font-medium"
+          class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
         >
-          📋 Mes Sondages
+          <ClipboardList class="h-4 w-4" />
+          Mes sondages
         </button>
         <button
           @click="goToProfile"
-          class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition font-medium"
+          class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-700"
         >
-          Mon Profil
+          <User class="h-4 w-4" />
+          Mon profil
         </button>
       </div>
     </div>
 
-    <!-- LOADING STATE -->
-    <div v-if="loading" class="text-center py-12">
-      <p class="text-muted-foreground">Chargement de vos données...</p>
+    <!-- LOADING -->
+    <div v-if="loading" class="flex items-center justify-center py-16">
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-teal-600 border-t-transparent" />
     </div>
 
     <div v-else class="space-y-6">
-      <!-- STATS CARDS -->
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <div class="border rounded-lg p-4 bg-card">
-          <p class="text-sm text-muted-foreground font-medium">Sondages en attente</p>
-          <p class="text-2xl font-bold mt-2">{{ stats.surveysPending }}</p>
-          <p class="text-xs text-muted-foreground mt-1">sur {{ stats.totalSurveys }}</p>
-        </div>
 
-        <div class="border rounded-lg p-4 bg-card">
-          <p class="text-sm text-muted-foreground font-medium">Sondages répondus</p>
-          <p class="text-2xl font-bold mt-2">{{ stats.surveysCompleted }}</p>
-          <p class="text-xs text-muted-foreground mt-1">complétés</p>
+      <!-- STATS -->
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-5">
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-500">En attente</p>
+          <p class="mt-2 text-2xl font-bold text-slate-900">{{ stats.surveysPending }}</p>
+          <p class="mt-0.5 text-xs text-slate-400">sur {{ stats.totalSurveys }} sondages</p>
         </div>
-
-        <div class="border rounded-lg p-4 bg-card">
-          <p class="text-sm text-muted-foreground font-medium">Mes formations</p>
-          <p class="text-2xl font-bold mt-2">{{ stats.formationsRegistered }}</p>
-          <p class="text-xs text-muted-foreground mt-1">inscriptions</p>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-500">Complétés</p>
+          <p class="mt-2 text-2xl font-bold text-emerald-600">{{ stats.surveysCompleted }}</p>
+          <p class="mt-0.5 text-xs text-slate-400">réponses envoyées</p>
         </div>
-
-        <div class="border rounded-lg p-4 bg-card">
-          <p class="text-sm text-muted-foreground font-medium">Formations disponibles</p>
-          <p class="text-2xl font-bold mt-2">{{ stats.formationsAvailable }}</p>
-          <p class="text-xs text-muted-foreground mt-1">à explorer</p>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-500">Mes formations</p>
+          <p class="mt-2 text-2xl font-bold text-teal-600">{{ stats.formationsRegistered }}</p>
+          <p class="mt-0.5 text-xs text-slate-400">inscriptions</p>
         </div>
-
-        <div class="border rounded-lg p-4 bg-card">
-          <p class="text-sm text-muted-foreground font-medium">Profil</p>
-          <p class="text-2xl font-bold mt-2">{{ currentUser?.accountType || '—' }}</p>
-          <p class="text-xs text-muted-foreground mt-1">rôle</p>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-500">Disponibles</p>
+          <p class="mt-2 text-2xl font-bold text-slate-900">{{ stats.formationsAvailable }}</p>
+          <p class="mt-0.5 text-xs text-slate-400">formations</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p class="text-xs font-medium text-slate-500">Rôle</p>
+          <p class="mt-2 text-lg font-bold capitalize text-slate-900">{{ currentUser?.accountType || '—' }}</p>
+          <p class="mt-0.5 text-xs text-slate-400">{{ currentUser?.department || '—' }}</p>
         </div>
       </div>
 
-      <!-- SURVEYS SECTION -->
-      <div class="border rounded-xl p-6 bg-card">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold">📋 Sondages</h2>
-          <span class="text-sm bg-secondary text-secondary-foreground px-3 py-1 rounded-full">
+      <!-- SONDAGES -->
+      <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <ClipboardList class="h-4 w-4 text-slate-400" />
+            Sondages
+          </h2>
+          <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
             {{ stats.surveysPending }} en attente
           </span>
         </div>
 
-        <!-- EMPTY STATE -->
-        <div v-if="surveys.length === 0" class="py-8 text-center">
-          <p class="text-muted-foreground">Aucun sondage disponible pour le moment</p>
+        <div v-if="surveys.length === 0" class="py-12 text-center">
+          <ClipboardList class="mx-auto h-8 w-8 text-slate-300" />
+          <p class="mt-3 text-sm text-slate-500">Aucun sondage disponible pour le moment</p>
         </div>
 
-        <!-- SURVEYS LIST -->
-        <div v-else class="space-y-3">
+        <div v-else class="divide-y divide-slate-100">
           <div
             v-for="survey in surveys"
             :key="survey.id"
-            class="border rounded-lg p-4 transition flex items-center justify-between"
-            :class="surveyStore.isSurveyExpired(survey) ? 'bg-gray-50 opacity-75' : 'hover:bg-accent'"
+            class="flex items-center gap-4 px-6 py-4 transition"
+            :class="surveyStore.isSurveyExpired(survey) ? 'opacity-60' : 'hover:bg-slate-50'"
           >
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h3 class="font-medium text-foreground">{{ survey.title }}</h3>
-                <span
-                  v-if="surveyStore.isSurveyExpired(survey)"
-                  class="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full"
-                >Clôturé</span>
-              </div>
-              <p class="text-sm text-muted-foreground mt-1">{{ survey.description }}</p>
-              <div class="flex items-center gap-2 mt-2 flex-wrap">
-                <span
-                  v-if="respondedSurveys.has(survey.id)"
-                  class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded"
-                >✓ Répondu</span>
-                <span
-                  v-else-if="surveyStore.isSurveyExpired(survey)"
-                  class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded"
-                >Délai expiré</span>
-                <span v-else class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                  En attente de réponse
-                </span>
-                <span
-                  v-if="survey.closes_at && !surveyStore.isSurveyExpired(survey)"
-                  class="text-xs text-amber-600"
-                >
-                  · Clôture le {{ formatDate(survey.closes_at) }}
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
+              :class="respondedSurveys.has(survey.id) ? 'bg-emerald-50' : surveyStore.isSurveyExpired(survey) ? 'bg-slate-100' : 'bg-teal-50'">
+              <CheckCircle2 v-if="respondedSurveys.has(survey.id)" class="h-4 w-4 text-emerald-600" />
+              <Clock v-else-if="surveyStore.isSurveyExpired(survey)" class="h-4 w-4 text-slate-400" />
+              <ClipboardList v-else class="h-4 w-4 text-teal-600" />
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium text-slate-900">{{ survey.title }}</p>
+              <div class="mt-1 flex flex-wrap items-center gap-2">
+                <span v-if="respondedSurveys.has(survey.id)"
+                  class="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">Répondu</span>
+                <span v-else-if="surveyStore.isSurveyExpired(survey)"
+                  class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">Clôturé</span>
+                <span v-else
+                  class="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">En attente</span>
+                <span v-if="survey.closes_at && !surveyStore.isSurveyExpired(survey)"
+                  class="flex items-center gap-1 text-xs text-slate-400">
+                  <Calendar class="h-3 w-3" />
+                  Clôture le {{ formatDate(survey.closes_at) }}
                 </span>
               </div>
             </div>
+
             <button
               @click="goToSurvey(survey.id)"
               :disabled="respondedSurveys.has(survey.id) || surveyStore.isSurveyExpired(survey)"
-              class="ml-4 shrink-0 px-4 py-2 rounded-lg font-medium transition text-sm"
-              :class="
-                respondedSurveys.has(survey.id) || surveyStore.isSurveyExpired(survey)
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
-              "
+              class="shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition"
+              :class="respondedSurveys.has(survey.id) || surveyStore.isSurveyExpired(survey)
+                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                : 'bg-teal-600 text-white hover:bg-teal-700'"
             >
               {{ respondedSurveys.has(survey.id) ? 'Complété' : surveyStore.isSurveyExpired(survey) ? 'Clôturé' : 'Répondre' }}
             </button>
@@ -261,163 +226,123 @@ const formatDate = (dateStr?: string) => {
         </div>
       </div>
 
-      <!-- FORMATIONS AVAILABLE SECTION -->
-      <div class="border rounded-xl p-6 bg-card">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-xl font-semibold">📚 Formations Disponibles</h2>
-          <span class="text-sm bg-secondary text-secondary-foreground px-3 py-1 rounded-full">
+      <!-- FORMATIONS DISPONIBLES -->
+      <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <GraduationCap class="h-4 w-4 text-slate-400" />
+            Formations disponibles
+          </h2>
+          <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
             {{ formations.length }} disponibles
           </span>
         </div>
 
-        <!-- EMPTY STATE -->
-        <div v-if="formations.length === 0" class="py-8 text-center">
-          <p class="text-muted-foreground">Aucune formation disponible pour le moment</p>
+        <div v-if="formations.length === 0" class="py-12 text-center">
+          <GraduationCap class="mx-auto h-8 w-8 text-slate-300" />
+          <p class="mt-3 text-sm text-slate-500">Aucune formation disponible pour le moment</p>
         </div>
 
-        <!-- FORMATIONS LIST -->
-        <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div v-else class="grid gap-4 p-6 md:grid-cols-2 lg:grid-cols-3">
           <div
             v-for="formation in formations"
             :key="formation.id"
-            class="flex flex-col border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-transparent hover:shadow-md transition"
-            :class="isFormationExpired(formation) ? 'opacity-75 from-gray-50' : ''"
+            class="flex flex-col rounded-xl border border-slate-200 bg-white p-4 transition hover:shadow-md"
+            :class="isFormationExpired(formation) ? 'opacity-70' : ''"
           >
-            <!-- En-tête -->
             <div class="mb-3 flex items-start justify-between gap-2">
               <div class="min-w-0">
-                <h3 class="font-semibold text-foreground leading-snug">{{ formation.title }}</h3>
-                <p class="text-xs text-muted-foreground mt-1">{{ formation.category }}</p>
+                <h3 class="text-sm font-semibold leading-snug text-slate-900">{{ formation.title }}</h3>
+                <p class="mt-0.5 text-xs text-slate-500">{{ formation.category }}</p>
               </div>
-              <!-- Badge expiré -->
-              <span
-                v-if="isFormationExpired(formation)"
-                class="shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500"
-              >Clôturé</span>
+              <span v-if="isFormationExpired(formation)"
+                class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">Clôturé</span>
+              <span v-else-if="isRegisteredForFormation(formation.id)"
+                class="shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">Inscrit</span>
             </div>
 
-            <p class="text-sm text-muted-foreground mb-3 line-clamp-2">{{ formation.description }}</p>
+            <p class="mb-3 line-clamp-2 text-xs text-slate-500">{{ formation.description }}</p>
 
-            <!-- Détails -->
-            <div class="space-y-2 mb-4 text-sm">
+            <div class="mb-4 space-y-1.5 text-xs">
               <div class="flex items-center justify-between">
-                <span class="text-muted-foreground">Durée :</span>
-                <span class="font-medium">{{ formation.duration }}</span>
+                <span class="text-slate-400">Durée</span>
+                <span class="font-medium text-slate-700">{{ formation.duration }}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-muted-foreground">Niveau :</span>
-                <span
-                  :class="{
-                    'px-2 py-1 rounded text-xs font-medium': true,
-                    'bg-green-100 text-green-800': formation.level === 'débutant',
-                    'bg-yellow-100 text-yellow-800': formation.level === 'intermédiaire',
-                    'bg-red-100 text-red-800': formation.level === 'avancé'
-                  }"
-                >{{ formation.level }}</span>
+                <span class="text-slate-400">Niveau</span>
+                <span class="rounded-full px-2 py-0.5 font-medium" :class="levelClass(formation.level)">{{ formation.level }}</span>
               </div>
-              <div class="flex items-center justify-between">
-                <span class="text-muted-foreground">Participants :</span>
-                <span class="font-medium">{{ formation.participants }}</span>
-              </div>
-              <!-- Dates si présentes -->
               <div v-if="formation.start_date || formation.end_date" class="flex items-center justify-between">
-                <span class="text-muted-foreground">Période :</span>
-                <span
-                  class="text-xs font-medium"
-                  :class="isFormationExpired(formation) ? 'text-red-500' : 'text-gray-700'"
-                >
+                <span class="text-slate-400">Période</span>
+                <span class="font-medium" :class="isFormationExpired(formation) ? 'text-red-500' : 'text-slate-700'">
                   <template v-if="formation.start_date && formation.end_date">
                     {{ formatDate(formation.start_date) }} → {{ formatDate(formation.end_date) }}
                   </template>
-                  <template v-else-if="formation.end_date">
-                    Jusqu'au {{ formatDate(formation.end_date) }}
-                  </template>
-                  <template v-else>
-                    Début : {{ formatDate(formation.start_date) }}
-                  </template>
+                  <template v-else-if="formation.end_date">Jusqu'au {{ formatDate(formation.end_date) }}</template>
+                  <template v-else>Début : {{ formatDate(formation.start_date) }}</template>
                 </span>
               </div>
             </div>
 
-            <!-- Bouton d'action -->
             <div class="mt-auto">
-              <!-- Formation expirée + non inscrit : bouton désactivé -->
               <button
                 v-if="isFormationExpired(formation) && !isRegisteredForFormation(formation.id)"
                 disabled
-                class="w-full px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-400 cursor-not-allowed"
-              >
-                Inscriptions clôturées
-              </button>
+                class="w-full rounded-lg bg-slate-100 py-2 text-xs font-medium text-slate-400 cursor-not-allowed"
+              >Inscriptions clôturées</button>
 
-              <!-- Formation expirée + déjà inscrit : peut se désinscrire -->
               <div v-else-if="isFormationExpired(formation) && isRegisteredForFormation(formation.id)" class="space-y-2">
-                <p class="text-center text-xs text-amber-600 bg-amber-50 rounded px-2 py-1">
-                  Vous êtes inscrit · Inscriptions clôturées
+                <p class="rounded-lg bg-amber-50 px-3 py-1.5 text-center text-xs text-amber-700">
+                  Inscrit · Inscriptions clôturées
                 </p>
                 <button
                   @click="unregisterFromFormation(formation.id)"
-                  class="w-full px-3 py-2 rounded-lg text-sm font-medium bg-red-100 text-red-800 hover:bg-red-200 transition"
-                >
-                  Se désinscrire
-                </button>
+                  class="w-full rounded-lg bg-red-50 py-2 text-xs font-medium text-red-700 transition hover:bg-red-100"
+                >Se désinscrire</button>
               </div>
 
-              <!-- Formation active : comportement normal -->
               <button
                 v-else
-                @click="isRegisteredForFormation(formation.id)
-                  ? unregisterFromFormation(formation.id)
-                  : registerForFormation(formation.id)"
-                :class="{
-                  'w-full px-3 py-2 rounded-lg font-medium transition text-sm': true,
-                  'bg-primary text-primary-foreground hover:bg-primary/90': !isRegisteredForFormation(formation.id),
-                  'bg-red-100 text-red-800 hover:bg-red-200': isRegisteredForFormation(formation.id)
-                }"
-              >
-                {{ isRegisteredForFormation(formation.id) ? '✓ Se désinscrire' : 'S\'inscrire' }}
-              </button>
+                @click="isRegisteredForFormation(formation.id) ? unregisterFromFormation(formation.id) : registerForFormation(formation.id)"
+                class="w-full rounded-lg py-2 text-xs font-medium transition"
+                :class="isRegisteredForFormation(formation.id)
+                  ? 'bg-red-50 text-red-700 hover:bg-red-100'
+                  : 'bg-teal-600 text-white hover:bg-teal-700'"
+              >{{ isRegisteredForFormation(formation.id) ? 'Se désinscrire' : "S'inscrire" }}</button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- MY FORMATIONS SECTION -->
-      <div v-if="myFormations.length > 0" class="border rounded-xl p-6 bg-card">
-        <h2 class="text-xl font-semibold mb-4">📖 Mes Formations Inscrites</h2>
-
-        <div class="space-y-3">
+      <!-- MES FORMATIONS INSCRITES -->
+      <div v-if="myFormations.length > 0" class="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-100 px-6 py-4">
+          <h2 class="flex items-center gap-2 text-sm font-semibold text-slate-900">
+            <BookOpen class="h-4 w-4 text-slate-400" />
+            Mes formations inscrites
+            <span class="rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700">{{ myFormations.length }}</span>
+          </h2>
+        </div>
+        <div class="divide-y divide-slate-100">
           <div
             v-for="formation in myFormations"
             :key="formation.id"
-            class="border-l-4 border-green-500 p-4 bg-green-50 rounded-r-lg"
+            class="flex items-center gap-4 px-6 py-4"
           >
-            <h3 class="font-medium text-foreground">{{ formation.title }}</h3>
-            <p class="text-sm text-muted-foreground mt-1">{{ formation.description }}</p>
-            <div class="flex items-center gap-2 mt-2 text-sm">
-              <span class="text-muted-foreground">📅 Durée:</span>
-              <span class="font-medium">{{ formation.duration }}</span>
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50">
+              <GraduationCap class="h-4 w-4 text-teal-600" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-slate-900">{{ formation.title }}</p>
+              <p class="mt-0.5 text-xs text-slate-500">{{ formation.description }}</p>
+            </div>
+            <div class="shrink-0 text-right text-xs text-slate-400">
+              <p>{{ formation.duration }}</p>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </template>
-
-<style scoped>
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-</style>

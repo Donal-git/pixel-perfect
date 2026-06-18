@@ -110,7 +110,9 @@ const formatDate = computed(() => {
       <!-- SUBMISSION INFO -->
       <div class="bg-green-50 border border-green-200 rounded-lg p-4">
         <div class="flex items-start gap-3">
-          <span class="text-2xl">✓</span>
+          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-green-200">
+            <svg class="h-4 w-4 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          </div>
           <div>
             <p class="font-semibold text-green-900">Réponses Soumises</p>
             <p class="text-sm text-green-800 mt-1">
@@ -164,7 +166,7 @@ const formatDate = computed(() => {
                 :key="item"
                 class="flex items-center gap-2"
               >
-                <span class="text-primary">✓</span>
+                <span class="text-teal-600 font-bold">✓</span>
                 <span class="text-foreground">{{ item }}</span>
               </div>
             </div>
@@ -194,9 +196,9 @@ const formatDate = computed(() => {
       </div>
 
       <!-- INFO MESSAGE -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p class="text-sm text-blue-800">
-          <strong>ℹ️ Information:</strong> Vous ne pouvez pas modifier vos réponses une fois soumises.
+      <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+        <p class="text-sm text-teal-800">
+          <strong>Information :</strong> Vous ne pouvez pas modifier vos réponses une fois soumises.
           Si vous souhaitez modifier votre réponse, veuillez contacter le GRH.
         </p>
       </div>

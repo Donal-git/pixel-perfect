@@ -83,20 +83,20 @@ const resetRequest = () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+  <div class="min-h-screen flex items-center justify-center bg-slate-50 p-4">
     <div class="w-full max-w-md">
 
       <!-- Card -->
-      <div class="rounded-2xl bg-white shadow-xl overflow-hidden">
+      <div class="rounded-2xl bg-white shadow-xl overflow-hidden border border-slate-200">
 
         <!-- Logo commun -->
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-8 text-center">
+        <div class="bg-slate-900 px-8 py-8 text-center">
           <div class="mx-auto mb-4 flex items-center justify-center">
-            <div class="rounded-2xl bg-white px-5 py-3 shadow-lg">
-              <img src="/logo.png" alt="EchoRH" class="h-12 w-auto object-contain" />
+            <div class="rounded-xl bg-white px-5 py-3 shadow-sm">
+              <img src="/logo.png" alt="EchoRH" class="h-10 w-auto object-contain" />
             </div>
           </div>
-          <p class="text-sm text-white/70">Gestion RH moderne & intuitive</p>
+          <p class="text-sm text-slate-400">Gestion RH moderne & intuitive</p>
         </div>
 
         <!-- ── VUE CONNEXION ───────────────────────────────────────────── -->
@@ -115,7 +115,7 @@ const resetRequest = () => {
                 required
                 autocomplete="email"
                 placeholder="votre@email.com"
-                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
             </div>
 
@@ -127,7 +127,7 @@ const resetRequest = () => {
                 required
                 autocomplete="current-password"
                 placeholder="••••••••"
-                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
             </div>
 
@@ -138,7 +138,7 @@ const resetRequest = () => {
             <button
               type="submit"
               :disabled="loginLoading"
-              class="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl disabled:opacity-50"
+              class="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 disabled:opacity-50"
             >
               <span v-if="loginLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               <LogIn v-else class="h-4 w-4" />
@@ -153,7 +153,7 @@ const resetRequest = () => {
 
           <button
             @click="view = 'request'"
-            class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-200 py-3 text-sm font-medium text-gray-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+            class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-3 text-sm font-medium text-slate-600 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-600"
           >
             <UserPlus class="h-4 w-4" />
             Demander un compte
@@ -185,7 +185,7 @@ const resetRequest = () => {
                 type="text"
                 required
                 placeholder="Jean Dupont"
-                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
             </div>
 
@@ -198,7 +198,7 @@ const resetRequest = () => {
                 type="email"
                 required
                 placeholder="jean.dupont@entreprise.com"
-                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
             </div>
 
@@ -208,7 +208,7 @@ const resetRequest = () => {
                 v-model="form.phone"
                 type="tel"
                 placeholder="+33 6 00 00 00 00"
-                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
             </div>
 
@@ -219,7 +219,7 @@ const resetRequest = () => {
               <select
                 v-model="form.department"
                 required
-                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white"
               >
                 <option value="" disabled>Sélectionner un département</option>
                 <option v-for="dept in DEPARTMENTS" :key="dept" :value="dept">{{ dept }}</option>
@@ -235,7 +235,7 @@ const resetRequest = () => {
                 type="text"
                 required
                 placeholder="Développeur, Comptable…"
-                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
             </div>
 
@@ -246,7 +246,7 @@ const resetRequest = () => {
             <button
               type="submit"
               :disabled="requestLoading"
-              class="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl disabled:opacity-50"
+              class="flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700 disabled:opacity-50"
             >
               <span v-if="requestLoading" class="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               <Send v-else class="h-4 w-4" />

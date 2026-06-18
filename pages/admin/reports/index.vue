@@ -445,7 +445,7 @@ const statusColor = (status: string) => {
         </button>
         <button
           @click="exportReport('pdf')"
-          class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+          class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700"
         >
           <Download class="h-4 w-4" />
           Export PDF
@@ -461,8 +461,8 @@ const statusColor = (status: string) => {
             <p class="text-sm text-gray-500">Employés actifs</p>
             <p class="text-3xl font-bold text-gray-900 mt-1">{{ globalKPIs.totalEmployees }}</p>
           </div>
-          <div class="h-12 w-12 rounded-lg bg-blue-100 flex items-center justify-center">
-            <Users class="h-6 w-6 text-blue-600" />
+          <div class="h-12 w-12 rounded-lg bg-teal-50 flex items-center justify-center">
+            <Users class="h-6 w-6 text-teal-600" />
           </div>
         </div>
       </div>
@@ -583,13 +583,13 @@ const statusColor = (status: string) => {
                 :key="item.dept"
                 class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
               >
-                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-600">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-50 text-xs font-bold text-teal-600">
                   {{ i + 1 }}
                 </span>
                 <span class="flex-1 text-sm font-medium text-gray-900 truncate">{{ item.dept }}</span>
                 <div class="flex-1 overflow-hidden rounded-full bg-gray-200 mx-2" style="height:10px;">
                   <div
-                    class="h-full rounded-full bg-blue-500 transition-all duration-700"
+                    class="h-full rounded-full bg-teal-500 transition-all duration-700"
                     :style="{ width: (responsesByDepartment[0]?.count ? Math.round((item.count / responsesByDepartment[0].count) * 100) : 0) + '%' }"
                   />
                 </div>
@@ -647,7 +647,7 @@ const statusColor = (status: string) => {
             </span>
             <NuxtLink
               :to="`/grh/surveys/${survey.id}/stats`"
-              class="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-purple-700"
+              class="inline-flex items-center gap-1.5 rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition hover:bg-slate-800"
             >
               <BarChart3 class="h-3.5 w-3.5" />
               Résultats
@@ -692,8 +692,8 @@ const statusColor = (status: string) => {
       <div class="lg:col-span-2 rounded-xl border bg-white shadow-sm overflow-hidden">
         <div class="flex items-center justify-between border-b px-6 py-4">
           <div class="flex items-center gap-3">
-            <div class="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
-              <GraduationCap class="h-5 w-5 text-purple-600" />
+            <div class="h-10 w-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <GraduationCap class="h-5 w-5 text-slate-600" />
             </div>
             <div>
               <h2 class="font-semibold text-gray-900">Synthèse des Formations</h2>
@@ -709,9 +709,9 @@ const statusColor = (status: string) => {
               <p class="text-2xl font-bold text-green-600">{{ formationStats.disponible }}</p>
               <p class="text-xs text-green-500 mt-1">Disponibles</p>
             </div>
-            <div class="text-center p-4 bg-blue-50 rounded-lg">
-              <p class="text-2xl font-bold text-blue-600">{{ formationStats.enCours }}</p>
-              <p class="text-xs text-blue-500 mt-1">En cours</p>
+            <div class="text-center p-4 bg-teal-50 rounded-lg">
+              <p class="text-2xl font-bold text-teal-600">{{ formationStats.enCours }}</p>
+              <p class="text-xs text-teal-500 mt-1">En cours</p>
             </div>
             <div class="text-center p-4 bg-gray-50 rounded-lg">
               <p class="text-2xl font-bold text-gray-600">{{ formationStats.terminee }}</p>
@@ -749,7 +749,7 @@ const statusColor = (status: string) => {
                 :key="item.dept"
                 class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
               >
-                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-bold text-purple-600">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
                   {{ i + 1 }}
                 </span>
                 <span class="flex-1 text-sm font-medium text-gray-900 truncate">{{ item.dept }}</span>
@@ -768,7 +768,7 @@ const statusColor = (status: string) => {
                 class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
               >
                 <div class="flex items-center gap-3">
-                  <span class="flex h-6 w-6 items-center justify-center rounded-full bg-purple-100 text-xs font-bold text-purple-600">
+                  <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600">
                     {{ i + 1 }}
                   </span>
                   <span class="text-sm font-medium text-gray-900">{{ cat[0] }}</span>

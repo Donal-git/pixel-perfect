@@ -48,7 +48,7 @@ const typeLabel = (type: string) =>
 
 const typeColor = (type: string) => {
   const map: Record<string, string> = {
-    contrat:          'bg-blue-100 text-blue-700',
+    contrat:          'bg-teal-50 text-teal-700',
     diplome:          'bg-purple-100 text-purple-700',
     attestation:      'bg-green-100 text-green-700',
     bulletin_salaire: 'bg-amber-100 text-amber-700',
@@ -159,7 +159,7 @@ const formatDate = (d: string) =>
 
     <!-- LOADING -->
     <div v-if="loading" class="flex items-center justify-center py-20">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+      <div class="h-8 w-8 animate-spin rounded-full border-4 border-teal-600 border-t-transparent" />
     </div>
 
     <div v-else-if="!profile" class="flex flex-col items-center justify-center py-20 text-center">
@@ -171,7 +171,7 @@ const formatDate = (d: string) =>
 
       <!-- HEADER ─────────────────────────────────────────────────────────── -->
       <div class="flex items-center gap-4">
-        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 text-xl font-bold text-blue-600">
+        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-teal-50 text-xl font-bold text-teal-600">
           {{ profile.full_name?.[0]?.toUpperCase() ?? '?' }}
         </div>
         <div>
@@ -192,7 +192,7 @@ const formatDate = (d: string) =>
             <input
               v-model="form.full_name"
               type="text"
-              class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
             />
           </div>
 
@@ -203,7 +203,7 @@ const formatDate = (d: string) =>
             <input
               v-model="form.email"
               type="email"
-              class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
             />
           </div>
 
@@ -214,7 +214,7 @@ const formatDate = (d: string) =>
             <input
               v-model="form.phone"
               type="tel"
-              class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
             />
           </div>
 
@@ -225,7 +225,7 @@ const formatDate = (d: string) =>
             <input
               v-model="form.department"
               type="text"
-              class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
             />
           </div>
 
@@ -236,7 +236,7 @@ const formatDate = (d: string) =>
             <input
               v-model="form.position"
               type="text"
-              class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              class="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
             />
           </div>
         </div>
@@ -245,7 +245,7 @@ const formatDate = (d: string) =>
           <button
             @click="handleSave"
             :disabled="saving"
-            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+            class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700 disabled:opacity-50"
           >
             <Loader2 v-if="saving" class="h-4 w-4 animate-spin" />
             <Save v-else class="h-4 w-4" />
@@ -267,7 +267,7 @@ const formatDate = (d: string) =>
         <div class="flex flex-col gap-3 rounded-lg border border-dashed border-gray-200 bg-gray-50 p-4 sm:flex-row sm:items-center">
           <select
             v-model="uploadType"
-            class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
           >
             <option v-for="t in DOC_TYPES" :key="t.value" :value="t.value">
               {{ t.label }}
@@ -287,7 +287,7 @@ const formatDate = (d: string) =>
               class="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
               :class="docStore.uploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'"
             >
-              <Loader2 v-if="docStore.uploading" class="h-4 w-4 animate-spin text-blue-600" />
+              <Loader2 v-if="docStore.uploading" class="h-4 w-4 animate-spin text-teal-600" />
               <Upload v-else class="h-4 w-4 text-gray-400" />
               {{ docStore.uploading ? 'Upload en cours…' : 'Choisir un fichier' }}
             </span>
@@ -297,7 +297,7 @@ const formatDate = (d: string) =>
 
         <!-- Chargement documents -->
         <div v-if="docStore.loading" class="flex items-center justify-center py-8">
-          <div class="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
+          <div class="h-5 w-5 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
         </div>
 
         <!-- Aucun document -->
@@ -338,7 +338,7 @@ const formatDate = (d: string) =>
                 @click="handleDownload(doc)"
                 :disabled="downloadingId === doc.id"
                 title="Télécharger"
-                class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-blue-50 hover:text-blue-600 disabled:opacity-40"
+                class="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-teal-50 hover:text-teal-600 disabled:opacity-40"
               >
                 <Loader2 v-if="downloadingId === doc.id" class="h-4 w-4 animate-spin" />
                 <Download v-else class="h-4 w-4" />

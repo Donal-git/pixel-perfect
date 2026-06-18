@@ -23,7 +23,7 @@ const totalParticipants = computed(() =>
 
 const categoryConfig: Record<string, { bar: string; badge: string; dot: string }> = {
   Informatique:  { bar: 'bg-purple-500', badge: 'bg-purple-100 text-purple-700', dot: 'bg-purple-500' },
-  Management:    { bar: 'bg-blue-500',   badge: 'bg-blue-100 text-blue-700',     dot: 'bg-blue-500'   },
+  Management:    { bar: 'bg-teal-500',   badge: 'bg-teal-50 text-teal-700',     dot: 'bg-teal-500'   },
   'Soft Skills': { bar: 'bg-pink-500',   badge: 'bg-pink-100 text-pink-700',     dot: 'bg-pink-500'   },
   Technique:     { bar: 'bg-orange-500', badge: 'bg-orange-100 text-orange-700', dot: 'bg-orange-500' },
   Sécurité:      { bar: 'bg-red-500',    badge: 'bg-red-100 text-red-700',       dot: 'bg-red-500'    },
@@ -61,7 +61,7 @@ const cfg = (cat: string) => categoryConfig[cat] ?? categoryConfig.Autre
       <p class="mt-3 text-sm font-medium text-gray-500">Aucune formation créée</p>
       <NuxtLink
         to="/grh/formations"
-        class="mt-3 text-xs text-blue-600 underline hover:text-blue-700"
+        class="mt-3 text-xs text-teal-600 underline hover:text-teal-700"
       >
         Gérer le catalogue →
       </NuxtLink>
@@ -108,7 +108,7 @@ const cfg = (cat: string) => categoryConfig[cat] ?? categoryConfig.Autre
     <div v-if="categories.length > 0" class="mt-5 border-t pt-4">
       <NuxtLink
         to="/grh/formations"
-        class="flex items-center justify-between text-sm font-medium text-blue-600 hover:text-blue-700"
+        class="flex items-center justify-between text-sm font-medium text-teal-600 hover:text-teal-700"
       >
         <span>Gérer le catalogue complet</span>
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

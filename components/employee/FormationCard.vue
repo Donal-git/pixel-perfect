@@ -25,14 +25,14 @@ const statusClass = computed(() => {
   return {
     'text-xs font-medium px-2 py-1 rounded': true,
     'bg-green-100 text-green-800': status === 'disponible',
-    'bg-blue-100 text-blue-800': status === 'en_cours',
+    'bg-teal-50 text-teal-700': status === 'en_cours',
     'bg-gray-100 text-gray-800': status === 'terminée'
   }
 })
 </script>
 
 <template>
-  <div class="border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-transparent hover:shadow-md transition">
+  <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md transition">
     <!-- Header -->
     <div class="mb-3">
       <h3 class="font-semibold text-foreground">{{ formation.title }}</h3>

@@ -5,14 +5,11 @@ import {
   Settings,
   Building2,
   Shield,
-  Bell,
   Lock,
-  Mail,
   Globe,
   Clock,
   Save,
   FileText,
-  GraduationCap,
   Users,
   ChevronRight
 } from 'lucide-vue-next'
@@ -37,10 +34,10 @@ const settingsCards = [
     href: '/admin/settings/profile',
     icon: User,
     color: 'blue',
-    bg: 'from-blue-50 to-indigo-50',
-    border: 'border-blue-200',
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-600'
+    bg: 'from-teal-50 to-slate-50',
+    border: 'border-teal-200',
+    iconBg: 'bg-teal-50',
+    iconColor: 'text-teal-600'
   },
   {
     title: 'Rôles & Permissions',
@@ -174,8 +171,8 @@ const adminInfo = computed(() => ({
       </div>
       <div class="bg-white rounded-xl border p-4 shadow-sm">
         <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-            <Users class="h-5 w-5 text-blue-600" />
+          <div class="h-10 w-10 rounded-lg bg-teal-50 flex items-center justify-center">
+            <Users class="h-5 w-5 text-teal-600" />
           </div>
           <div>
             <p class="text-2xl font-bold text-gray-900">{{ adminInfo.name }}</p>
@@ -247,7 +244,7 @@ const adminInfo = computed(() => ({
               v-model="generalSettings.companyName"
               type="text"
               placeholder="Entreprise RH"
-              class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+              class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
             />
           </div>
         </div>
@@ -268,7 +265,7 @@ const adminInfo = computed(() => ({
                 type="number"
                 min="1"
                 max="100"
-                class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
             </div>
             <div class="flex items-center">
@@ -279,7 +276,7 @@ const adminInfo = computed(() => ({
                     type="checkbox"
                     class="sr-only peer"
                   />
-                  <div class="w-10 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
+                  <div class="w-10 h-6 bg-gray-200 rounded-full peer peer-checked:bg-teal-600 transition-colors"></div>
                   <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
                 </div>
                 <span class="text-sm text-gray-700">Autoriser les sondages anonymes</span>
@@ -307,7 +304,7 @@ const adminInfo = computed(() => ({
                 type="number"
                 min="5"
                 max="120"
-                class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
             </div>
             <div>
@@ -319,7 +316,7 @@ const adminInfo = computed(() => ({
                 type="number"
                 min="3"
                 max="10"
-                class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
             </div>
             <div class="flex items-center md:col-span-2">
@@ -330,7 +327,7 @@ const adminInfo = computed(() => ({
                     type="checkbox"
                     class="sr-only peer"
                   />
-                  <div class="w-10 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 transition-colors"></div>
+                  <div class="w-10 h-6 bg-gray-200 rounded-full peer peer-checked:bg-teal-600 transition-colors"></div>
                   <div class="absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-4"></div>
                 </div>
                 <span class="text-sm text-gray-700">Exiger la vérification email</span>
@@ -345,7 +342,7 @@ const adminInfo = computed(() => ({
         <button
           @click="saveSettings"
           :disabled="loading"
-          class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+          class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700 disabled:opacity-50"
         >
           <Save class="h-4 w-4" />
           {{ loading ? 'Enregistrement...' : 'Enregistrer les modifications' }}

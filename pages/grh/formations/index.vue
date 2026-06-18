@@ -75,7 +75,7 @@ const stats = computed(() => ({
 const statusConfig: Record<Formation['status'], { label: string; class: string; icon: any }> = {
   brouillon:  { label: 'Brouillon',  class: 'bg-amber-100 text-amber-700',  icon: FileText   },
   disponible: { label: 'Disponible', class: 'bg-green-100 text-green-700',  icon: CheckCircle2 },
-  en_cours:   { label: 'En cours',   class: 'bg-blue-100 text-blue-700',    icon: PlayCircle  },
+  en_cours:   { label: 'En cours',   class: 'bg-teal-50 text-teal-700',    icon: PlayCircle  },
   terminée:   { label: 'Terminée',   class: 'bg-gray-100 text-gray-500',    icon: Archive     }
 }
 
@@ -87,7 +87,7 @@ const levelConfig: Record<Formation['level'], { label: string; class: string }> 
 
 const categoryColors: Record<string, string> = {
   Informatique:  'bg-purple-100 text-purple-700',
-  Management:    'bg-blue-100 text-blue-700',
+  Management:    'bg-teal-50 text-teal-700',
   'Soft Skills': 'bg-pink-100 text-pink-700',
   Technique:     'bg-orange-100 text-orange-700',
   Sécurité:      'bg-red-100 text-red-700',
@@ -112,16 +112,6 @@ const deptLabel = (departments: string[]) =>
   departments.includes(ALL_DEPTS) ? 'tous les départements' : departments.join(', ')
 
 // ── Modal ────────────────────────────────────────────────────────────────────
-const openCreateModal = () => {
-  editingFormationId.value = null
-  form.value = {
-    title: '', description: '', category: 'Informatique', duration: '',
-    level: 'débutant', status: 'brouillon', departments: [], participants: 0,
-    start_date: '', end_date: ''
-  }
-  showFormModal.value = true
-}
-
 const openEditModal = (id: string) => {
   const f = formationStore.getFormationById(id)
   if (!f) return
@@ -275,7 +265,7 @@ const confirmDelete = async () => {
       </div>
       <NuxtLink
         to="/grh/formations/create"
-        class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+        class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700"
       >
         <Plus class="h-4 w-4" />
         Nouvelle formation
@@ -301,7 +291,7 @@ const confirmDelete = async () => {
       </div>
       <div class="rounded-xl border bg-white p-4 shadow-sm">
         <p class="text-xs font-medium text-gray-500">En cours</p>
-        <p class="mt-1 text-3xl font-bold text-blue-600">{{ stats.ongoing }}</p>
+        <p class="mt-1 text-3xl font-bold text-teal-600">{{ stats.ongoing }}</p>
         <p class="mt-0.5 text-xs text-gray-400">sessions actives</p>
       </div>
     </div>
@@ -314,19 +304,19 @@ const confirmDelete = async () => {
           v-model="searchQuery"
           type="text"
           placeholder="Rechercher une formation..."
-          class="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          class="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-4 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
         />
       </div>
       <select
         v-model="filterCategory"
-        class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+        class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white"
       >
         <option value="all">Toutes les catégories</option>
         <option v-for="cat in CATEGORIES" :key="cat" :value="cat">{{ cat }}</option>
       </select>
       <select
         v-model="filterStatus"
-        class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+        class="rounded-lg border border-gray-200 px-3 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white"
       >
         <option value="all">Tous les statuts</option>
         <option value="brouillon">Brouillon</option>
@@ -414,7 +404,7 @@ const confirmDelete = async () => {
           <div class="flex flex-wrap gap-1">
             <span
               v-if="formation.departments.includes('Tous les départements')"
-              class="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600"
+              class="rounded-md bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600"
             >Tous les départements</span>
             <template v-else>
               <span
@@ -453,7 +443,7 @@ const confirmDelete = async () => {
 
           <button
             @click="openEditModal(formation.id)"
-            class="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-xs font-medium text-gray-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600"
+            class="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-xs font-medium text-gray-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-600"
           >
             <Pencil class="h-3.5 w-3.5" />
             Modifier
@@ -510,7 +500,7 @@ const confirmDelete = async () => {
                   v-model="form.title"
                   type="text"
                   placeholder="Titre de la formation"
-                  class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                  class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
                 />
               </div>
 
@@ -521,7 +511,7 @@ const confirmDelete = async () => {
                   v-model="form.description"
                   placeholder="Décrivez les objectifs et le contenu de la formation..."
                   rows="3"
-                  class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none"
+                  class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 resize-none"
                 />
               </div>
 
@@ -531,7 +521,7 @@ const confirmDelete = async () => {
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Catégorie</label>
                   <select
                     v-model="form.category"
-                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white"
                   >
                     <option v-for="cat in CATEGORIES" :key="cat" :value="cat">{{ cat }}</option>
                   </select>
@@ -540,7 +530,7 @@ const confirmDelete = async () => {
                   <label class="mb-1.5 block text-sm font-medium text-gray-700">Niveau</label>
                   <select
                     v-model="form.level"
-                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white"
                   >
                     <option value="débutant">Débutant</option>
                     <option value="intermédiaire">Intermédiaire</option>
@@ -559,7 +549,7 @@ const confirmDelete = async () => {
                     v-model="form.duration"
                     type="text"
                     placeholder="Ex : 2 jours, 4 heures"
-                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
                   />
                 </div>
                 <div>
@@ -569,7 +559,7 @@ const confirmDelete = async () => {
                     type="number"
                     min="0"
                     placeholder="0"
-                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                    class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
                   />
                 </div>
               </div>
@@ -586,7 +576,7 @@ const confirmDelete = async () => {
                     <input
                       v-model="form.start_date"
                       type="date"
-                      class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
                     />
                   </div>
                   <div>
@@ -595,7 +585,7 @@ const confirmDelete = async () => {
                       v-model="form.end_date"
                       type="date"
                       :min="form.start_date || undefined"
-                      class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                      class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
                     />
                   </div>
                 </div>
@@ -606,7 +596,7 @@ const confirmDelete = async () => {
                 <label class="mb-1.5 block text-sm font-medium text-gray-700">Statut</label>
                 <select
                   v-model="form.status"
-                  class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+                  class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white"
                 >
                   <option value="disponible">Disponible</option>
                   <option value="en_cours">En cours</option>
@@ -638,7 +628,7 @@ const confirmDelete = async () => {
                     class="flex cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-xs transition select-none"
                     :class="[
                       form.departments.includes(dept) && !isAllDepts
-                        ? 'border-blue-400 bg-blue-50 text-blue-700 font-medium'
+                        ? 'border-teal-400 bg-teal-50 text-teal-700 font-medium'
                         : 'border-gray-200 text-gray-600 hover:bg-gray-50',
                       isAllDepts ? 'opacity-40 cursor-not-allowed' : ''
                     ]"
@@ -648,7 +638,7 @@ const confirmDelete = async () => {
                       :checked="form.departments.includes(dept) && !isAllDepts"
                       :disabled="isAllDepts"
                       @change="toggleDepartment(dept)"
-                      class="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
+                      class="h-3.5 w-3.5 rounded border-gray-300 text-teal-600"
                     />
                     {{ dept }}
                   </label>
@@ -658,14 +648,14 @@ const confirmDelete = async () => {
                 <label
                   class="mt-2 flex cursor-pointer items-center gap-2.5 rounded-lg border p-3 text-sm font-medium transition select-none"
                   :class="isAllDepts
-                    ? 'border-blue-400 bg-blue-50 text-blue-700'
+                    ? 'border-teal-400 bg-teal-50 text-teal-700'
                     : 'border-gray-200 text-gray-600 hover:bg-gray-50'"
                 >
                   <input
                     type="checkbox"
                     :checked="isAllDepts"
                     @change="toggleAllDepts"
-                    class="h-4 w-4 rounded border-gray-300 text-blue-600"
+                    class="h-4 w-4 rounded border-gray-300 text-teal-600"
                   />
                   <Building2 class="h-4 w-4 shrink-0" />
                   Tous les départements
@@ -719,7 +709,7 @@ const confirmDelete = async () => {
                 <button
                   @click="handleSave"
                   :disabled="formLoading"
-                  class="flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+                  class="flex items-center gap-2 rounded-lg bg-teal-600 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-teal-700 disabled:opacity-50"
                 >
                   <svg v-if="formLoading" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />

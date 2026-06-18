@@ -18,7 +18,7 @@
             <UIAvatar class="w-28 h-28 text-xl border-4 border-white shadow-lg mx-auto">
               {{ profileForm.fullName[0]?.toUpperCase() || 'A' }}
             </UIAvatar>
-            <label class="absolute bottom-0 right-0 bg-primary text-white p-3 rounded-full border-4 border-white shadow-lg cursor-pointer hover:bg-blue-600 transition-all block">
+            <label class="absolute bottom-0 right-0 bg-primary text-white p-3 rounded-full border-4 border-white shadow-lg cursor-pointer hover:bg-teal-700 transition-all block">
               <Upload class="w-5 h-5" />
               <input type="file" class="hidden" @change="handleAvatarUpload" accept="image/*" />
             </label>

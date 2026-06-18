@@ -217,7 +217,7 @@ const getPermissionCount = (role: Role) => {
             :class="role.name.toLowerCase() === 'admin'
               ? 'bg-red-100 text-red-700'
               : role.name.toLowerCase() === 'grh'
-                ? 'bg-blue-100 text-blue-700'
+                ? 'bg-teal-50 text-teal-700'
                 : 'bg-gray-100 text-gray-700'"
           >
             {{ role.name }}
@@ -234,7 +234,7 @@ const getPermissionCount = (role: Role) => {
             <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 @click="openEditModal(role.id)"
-                class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                class="p-2 text-teal-600 hover:bg-teal-50 rounded-lg transition"
                 title="Modifier"
               >
                 <Edit3 class="w-4 h-4" />

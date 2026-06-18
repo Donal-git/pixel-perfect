@@ -40,7 +40,7 @@ defineProps<Props>()
           </span>
           <span
             v-if="isAnonymous"
-            class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded"
+            class="px-2 py-1 bg-teal-50 text-teal-700 text-xs rounded"
             title="Ce sondage est anonyme"
           >
             👤 Anonyme
