@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { Plus, Trash2, GripVertical, ChevronLeft, Save, Send, CalendarX2 } from 'lucide-vue-next'
+import { Plus, Trash2, GripVertical, ChevronLeft, Save, Send, CalendarX2, Users } from 'lucide-vue-next'
 import { useSurveyStore } from '~/stores/survey'
 import { useToast } from '~/composables/useToast'
 
@@ -13,6 +13,24 @@ const title = ref('')
 const description = ref('')
 const isAnonymous = ref(false)
 const closesAt = ref('')
+
+// --- Départements ---
+const DEPARTMENTS = ['RH', 'Finance', 'IT', 'Commercial', 'Production', 'Marketing', 'Direction', 'Logistique']
+const selectedDepartments = ref<string[]>([])
+
+const toggleDepartment = (dept: string) => {
+  const idx = selectedDepartments.value.indexOf(dept)
+  if (idx === -1) selectedDepartments.value.push(dept)
+  else selectedDepartments.value.splice(idx, 1)
+}
+
+const toggleAllDepartments = () => {
+  if (selectedDepartments.value.length === DEPARTMENTS.length) {
+    selectedDepartments.value = []
+  } else {
+    selectedDepartments.value = [...DEPARTMENTS]
+  }
+}
 
 interface Question {
   id: string
@@ -106,7 +124,7 @@ const handleSave = async (status: 'draft' | 'active') => {
 
   loading.value = true
   try {
-    await surveyStore.createSurvey({
+    const newSurvey = await surveyStore.createSurvey({
       title: title.value.trim(),
       description: description.value.trim(),
       isAnonymous: isAnonymous.value,
@@ -114,9 +132,20 @@ const handleSave = async (status: 'draft' | 'active') => {
       questions: questions.value.map(q => ({ ...q })),
       ...(closesAt.value ? { closes_at: closesAt.value } : {})
     })
+
+    // Assigner les départements si sélectionnés
+    if (selectedDepartments.value.length > 0 && newSurvey?.id) {
+      await surveyStore.sendSurvey(newSurvey.id, [...selectedDepartments.value])
+    }
+
+    const deptInfo = selectedDepartments.value.length > 0
+      ? ` — envoyé à : ${selectedDepartments.value.join(', ')}`
+      : ''
     toast.success(
       status === 'active' ? 'Sondage publié' : 'Brouillon enregistré',
-      status === 'active' ? 'Le sondage est maintenant actif' : 'Vous pouvez le modifier plus tard'
+      status === 'active'
+        ? `Le sondage est maintenant actif${deptInfo}`
+        : 'Vous pouvez le modifier et l\'envoyer plus tard'
     )
     await navigateTo('/grh/surveys')
   } catch (err: any) {
@@ -196,6 +225,61 @@ const handleSave = async (status: 'draft' | 'active') => {
         />
         <p class="mt-1 text-xs text-gray-400">Le sondage sera automatiquement fermé aux employés après cette date.</p>
       </div>
+    </div>
+
+    <!-- DÉPARTEMENTS -->
+    <div class="rounded-xl border bg-white p-6 shadow-sm space-y-4">
+      <div class="flex items-center gap-2">
+        <Users class="h-4 w-4 text-gray-400" />
+        <h2 class="text-base font-semibold text-gray-800">Départements destinataires</h2>
+        <span class="ml-auto text-xs text-gray-400">(optionnel — peut être modifié après création)</span>
+      </div>
+
+      <!-- Tout sélectionner -->
+      <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-gray-300 p-3 transition hover:bg-gray-50">
+        <input
+          type="checkbox"
+          :checked="selectedDepartments.length === DEPARTMENTS.length"
+          :indeterminate="selectedDepartments.length > 0 && selectedDepartments.length < DEPARTMENTS.length"
+          @change="toggleAllDepartments"
+          class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+        />
+        <span class="text-sm font-semibold text-gray-800">Tous les départements</span>
+        <span class="ml-auto rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-600">
+          {{ DEPARTMENTS.length }}
+        </span>
+      </label>
+
+      <!-- Grille des départements -->
+      <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <label
+          v-for="dept in DEPARTMENTS"
+          :key="dept"
+          class="flex cursor-pointer items-center gap-2.5 rounded-lg border p-3 transition hover:bg-gray-50"
+          :class="selectedDepartments.includes(dept) ? 'border-blue-400 bg-blue-50' : 'border-gray-200'"
+        >
+          <input
+            type="checkbox"
+            :checked="selectedDepartments.includes(dept)"
+            @change="toggleDepartment(dept)"
+            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <div
+            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white"
+            :class="selectedDepartments.includes(dept) ? 'bg-blue-500' : 'bg-gray-300'"
+          >
+            {{ dept[0] }}
+          </div>
+          <span class="text-sm text-gray-700">{{ dept }}</span>
+        </label>
+      </div>
+
+      <p v-if="selectedDepartments.length > 0" class="text-xs text-blue-600">
+        {{ selectedDepartments.length }} département{{ selectedDepartments.length > 1 ? 's' : '' }} sélectionné{{ selectedDepartments.length > 1 ? 's' : '' }}
+      </p>
+      <p v-else class="text-xs text-gray-400">
+        Aucun département sélectionné — le sondage sera visible par tous si publié.
+      </p>
     </div>
 
     <!-- QUESTIONS -->
