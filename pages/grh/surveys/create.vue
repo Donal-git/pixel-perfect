@@ -1,37 +1,42 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Plus, Trash2, GripVertical, ChevronLeft, Save, Send, CalendarX2, Users } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import {
+  Plus, Trash2, GripVertical, ChevronLeft,
+  Save, Send, CalendarX2, Users, CheckSquare
+} from 'lucide-vue-next'
 import { useSurveyStore } from '~/stores/survey'
 import { useToast } from '~/composables/useToast'
 
 const surveyStore = useSurveyStore()
-const toast = useToast()
-const loading = ref(false)
+const toast       = useToast()
+const loading     = ref(false)
 
-// --- Données du formulaire ---
-const title = ref('')
+// ── Informations générales ───────────────────────────────────────────────────
+const title       = ref('')
 const description = ref('')
 const isAnonymous = ref(false)
-const closesAt = ref('')
+const closesAt    = ref('')
 
-// --- Départements ---
-const DEPARTMENTS = ['RH', 'Finance', 'IT', 'Commercial', 'Production', 'Marketing', 'Direction', 'Logistique']
+// ── Départements ─────────────────────────────────────────────────────────────
+const DEPARTMENTS = [
+  'RH', 'Finance', 'IT', 'Commercial',
+  'Production', 'Marketing', 'Direction', 'Logistique'
+]
 const selectedDepartments = ref<string[]>([])
+
+const allSelected = computed(() => selectedDepartments.value.length === DEPARTMENTS.length)
 
 const toggleDepartment = (dept: string) => {
   const idx = selectedDepartments.value.indexOf(dept)
   if (idx === -1) selectedDepartments.value.push(dept)
-  else selectedDepartments.value.splice(idx, 1)
+  else            selectedDepartments.value.splice(idx, 1)
 }
 
-const toggleAllDepartments = () => {
-  if (selectedDepartments.value.length === DEPARTMENTS.length) {
-    selectedDepartments.value = []
-  } else {
-    selectedDepartments.value = [...DEPARTMENTS]
-  }
+const toggleAll = () => {
+  selectedDepartments.value = allSelected.value ? [] : [...DEPARTMENTS]
 }
 
+// ── Questions ────────────────────────────────────────────────────────────────
 interface Question {
   id: string
   question_text: string
@@ -40,27 +45,24 @@ interface Question {
   is_required: boolean
 }
 
-const questions = ref<Question[]>([
-  {
-    id: crypto.randomUUID(),
-    question_text: '',
-    question_type: 'multiple_choice',
-    options: ['Option 1', 'Option 2'],
-    is_required: true
-  }
-])
+const questions = ref<Question[]>([{
+  id: crypto.randomUUID(),
+  question_text: '',
+  question_type: 'multiple_choice',
+  options: ['Option 1', 'Option 2'],
+  is_required: true
+}])
 
 const questionTypeLabels: Record<string, string> = {
-  multiple_choice: 'Choix multiples',
-  open_text: 'Texte libre',
-  likert: 'Échelle de Likert (1-5)',
-  checkbox: 'Cases à cocher',
-  rating: 'Notation par étoiles'
+  multiple_choice: 'Choix multiple',
+  open_text:       'Texte libre',
+  likert:          'Échelle de Likert (1–5)',
+  checkbox:        'Cases à cocher',
+  rating:          'Notation par étoiles'
 }
 
 const needsOptions = (type: string) => type === 'multiple_choice' || type === 'checkbox'
 
-// --- Gestion des questions ---
 const addQuestion = () => {
   questions.value.push({
     id: crypto.randomUUID(),
@@ -80,11 +82,8 @@ const removeQuestion = (id: string) => {
 }
 
 const onTypeChange = (question: Question) => {
-  if (!needsOptions(question.question_type)) {
-    question.options = []
-  } else if (question.options.length === 0) {
-    question.options = ['Option 1', 'Option 2']
-  }
+  if (!needsOptions(question.question_type)) question.options = []
+  else if (question.options.length === 0)    question.options = ['Option 1', 'Option 2']
 }
 
 const addOption = (question: Question) => {
@@ -99,10 +98,14 @@ const removeOption = (question: Question, index: number) => {
   question.options.splice(index, 1)
 }
 
-// --- Validation ---
-const validate = () => {
+// ── Validation ───────────────────────────────────────────────────────────────
+const validate = (status: 'draft' | 'active') => {
   if (!title.value.trim()) {
     toast.error('Le titre du sondage est obligatoire')
+    return false
+  }
+  if (status === 'active' && selectedDepartments.value.length === 0) {
+    toast.error('Sélectionnez au moins un département destinataire avant de publier')
     return false
   }
   for (const q of questions.value) {
@@ -118,35 +121,35 @@ const validate = () => {
   return true
 }
 
-// --- Sauvegarde ---
+// ── Sauvegarde ───────────────────────────────────────────────────────────────
 const handleSave = async (status: 'draft' | 'active') => {
-  if (!validate()) return
+  if (!validate(status)) return
 
   loading.value = true
   try {
     const newSurvey = await surveyStore.createSurvey({
-      title: title.value.trim(),
+      title:       title.value.trim(),
       description: description.value.trim(),
       isAnonymous: isAnonymous.value,
       status,
-      questions: questions.value.map(q => ({ ...q })),
+      questions:   questions.value.map(q => ({ ...q })),
       ...(closesAt.value ? { closes_at: closesAt.value } : {})
     })
 
-    // Assigner les départements si sélectionnés
+    // Assigner les départements sélectionnés via l'endpoint dédié
     if (selectedDepartments.value.length > 0 && newSurvey?.id) {
       await surveyStore.sendSurvey(newSurvey.id, [...selectedDepartments.value])
     }
 
-    const deptInfo = selectedDepartments.value.length > 0
-      ? ` — envoyé à : ${selectedDepartments.value.join(', ')}`
-      : ''
-    toast.success(
-      status === 'active' ? 'Sondage publié' : 'Brouillon enregistré',
-      status === 'active'
-        ? `Le sondage est maintenant actif${deptInfo}`
-        : 'Vous pouvez le modifier et l\'envoyer plus tard'
-    )
+    if (status === 'active') {
+      toast.success(
+        'Sondage publié',
+        `Envoyé aux départements : ${selectedDepartments.value.join(', ')}`
+      )
+    } else {
+      toast.success('Brouillon enregistré', 'Vous pouvez le compléter et le publier plus tard')
+    }
+
     await navigateTo('/grh/surveys')
   } catch (err: any) {
     toast.error(err?.data?.message || 'Impossible de sauvegarder le sondage')
@@ -157,9 +160,9 @@ const handleSave = async (status: 'draft' | 'active') => {
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl space-y-6">
+  <div class="mx-auto max-w-3xl space-y-6 pb-10">
 
-    <!-- HEADER -->
+    <!-- ─── HEADER ──────────────────────────────────────────────────────── -->
     <div class="flex items-center gap-4">
       <NuxtLink
         to="/grh/surveys"
@@ -169,14 +172,18 @@ const handleSave = async (status: 'draft' | 'active') => {
       </NuxtLink>
       <div>
         <h1 class="text-2xl font-bold text-gray-900">Créer un sondage</h1>
-        <p class="text-sm text-gray-500">Composez votre sondage et définissez les questions</p>
+        <p class="text-sm text-gray-500">Remplissez les informations, choisissez les destinataires puis composez vos questions</p>
       </div>
     </div>
 
-    <!-- INFORMATIONS GÉNÉRALES -->
-    <div class="rounded-xl border bg-white p-6 shadow-sm space-y-4">
-      <h2 class="text-base font-semibold text-gray-800">Informations générales</h2>
+    <!-- ─── ÉTAPE 1 — INFORMATIONS GÉNÉRALES ────────────────────────────── -->
+    <div class="rounded-xl border bg-white p-6 shadow-sm space-y-5">
+      <div class="flex items-center gap-2 border-b pb-3">
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">1</span>
+        <h2 class="text-base font-semibold text-gray-800">Informations générales</h2>
+      </div>
 
+      <!-- Titre -->
       <div>
         <label class="mb-1.5 block text-sm font-medium text-gray-700">
           Titre du sondage <span class="text-red-500">*</span>
@@ -184,125 +191,179 @@ const handleSave = async (status: 'draft' | 'active') => {
         <input
           v-model="title"
           type="text"
-          placeholder="Ex : Satisfaction des employés Q2 2024"
+          placeholder="Ex : Satisfaction des employés — T2 2025"
           class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
         />
       </div>
 
+      <!-- Description -->
       <div>
-        <label class="mb-1.5 block text-sm font-medium text-gray-700">Description</label>
+        <label class="mb-1.5 block text-sm font-medium text-gray-700">
+          Description
+          <span class="ml-1 font-normal text-gray-400">(optionnel)</span>
+        </label>
         <textarea
           v-model="description"
-          placeholder="Décrivez l'objectif de ce sondage..."
+          placeholder="Décrivez brièvement l'objectif de ce sondage..."
           rows="3"
-          class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none"
+          class="w-full resize-none rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
         />
       </div>
 
-      <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 p-3 transition hover:bg-gray-50">
-        <input
-          type="checkbox"
-          v-model="isAnonymous"
-          class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        />
-        <div>
-          <p class="text-sm font-medium text-gray-800">Réponses anonymes</p>
-          <p class="text-xs text-gray-500">Les identités des répondants ne seront pas enregistrées</p>
-        </div>
-      </label>
-
-      <div>
-        <label class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
-          <CalendarX2 class="h-4 w-4 text-gray-400" />
-          Date de clôture automatique
-          <span class="ml-1 text-xs font-normal text-gray-400">(optionnel)</span>
+      <!-- Anonymat + Date de clôture sur la même ligne -->
+      <div class="grid gap-4 sm:grid-cols-2">
+        <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-gray-200 p-4 transition hover:bg-gray-50">
+          <input
+            type="checkbox"
+            v-model="isAnonymous"
+            class="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <div>
+            <p class="text-sm font-medium text-gray-800">Réponses anonymes</p>
+            <p class="mt-0.5 text-xs text-gray-500">Les identités des répondants ne seront pas enregistrées</p>
+          </div>
         </label>
-        <input
-          v-model="closesAt"
-          type="date"
-          :min="new Date().toISOString().split('T')[0]"
-          class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-        />
-        <p class="mt-1 text-xs text-gray-400">Le sondage sera automatiquement fermé aux employés après cette date.</p>
+
+        <div>
+          <label class="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+            <CalendarX2 class="h-4 w-4 text-gray-400" />
+            Date de clôture automatique
+          </label>
+          <input
+            v-model="closesAt"
+            type="date"
+            :min="new Date().toISOString().split('T')[0]"
+            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          />
+          <p class="mt-1 text-xs text-gray-400">Le sondage se fermera automatiquement à cette date.</p>
+        </div>
       </div>
     </div>
 
-    <!-- DÉPARTEMENTS -->
-    <div class="rounded-xl border bg-white p-6 shadow-sm space-y-4">
-      <div class="flex items-center gap-2">
-        <Users class="h-4 w-4 text-gray-400" />
+    <!-- ─── ÉTAPE 2 — DÉPARTEMENTS DESTINATAIRES ────────────────────────── -->
+    <div class="rounded-xl border bg-white p-6 shadow-sm space-y-5">
+      <div class="flex items-center gap-2 border-b pb-3">
+        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">2</span>
         <h2 class="text-base font-semibold text-gray-800">Départements destinataires</h2>
-        <span class="ml-auto text-xs text-gray-400">(optionnel — peut être modifié après création)</span>
+        <span class="ml-auto inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 border border-amber-200">
+          Requis pour publier
+        </span>
       </div>
 
-      <!-- Tout sélectionner -->
-      <label class="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-gray-300 p-3 transition hover:bg-gray-50">
-        <input
-          type="checkbox"
-          :checked="selectedDepartments.length === DEPARTMENTS.length"
-          :indeterminate="selectedDepartments.length > 0 && selectedDepartments.length < DEPARTMENTS.length"
-          @change="toggleAllDepartments"
-          class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        />
-        <span class="text-sm font-semibold text-gray-800">Tous les départements</span>
-        <span class="ml-auto rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-600">
+      <p class="text-sm text-gray-500">
+        Sélectionnez les départements qui recevront ce sondage. Seuls les employés de ces départements pourront y accéder et y répondre.
+      </p>
+
+      <!-- Sélectionner tous -->
+      <button
+        type="button"
+        @click="toggleAll"
+        class="flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition"
+        :class="allSelected
+          ? 'border-blue-400 bg-blue-50'
+          : 'border-dashed border-gray-300 hover:border-blue-300 hover:bg-gray-50'"
+      >
+        <div
+          class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition"
+          :class="allSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-400'"
+        >
+          <CheckSquare class="h-4 w-4" />
+        </div>
+        <div class="flex-1">
+          <p class="text-sm font-semibold" :class="allSelected ? 'text-blue-700' : 'text-gray-700'">
+            Tous les départements
+          </p>
+          <p class="text-xs" :class="allSelected ? 'text-blue-500' : 'text-gray-400'">
+            Envoyer à l'ensemble des {{ DEPARTMENTS.length }} départements
+          </p>
+        </div>
+        <span
+          class="shrink-0 rounded-full px-2.5 py-1 text-xs font-bold"
+          :class="allSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-500'"
+        >
           {{ DEPARTMENTS.length }}
         </span>
-      </label>
+      </button>
 
       <!-- Grille des départements -->
-      <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <label
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <button
           v-for="dept in DEPARTMENTS"
           :key="dept"
-          class="flex cursor-pointer items-center gap-2.5 rounded-lg border p-3 transition hover:bg-gray-50"
-          :class="selectedDepartments.includes(dept) ? 'border-blue-400 bg-blue-50' : 'border-gray-200'"
+          type="button"
+          @click="toggleDepartment(dept)"
+          class="group relative flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all"
+          :class="selectedDepartments.includes(dept)
+            ? 'border-blue-400 bg-blue-50 shadow-sm'
+            : 'border-gray-200 bg-white hover:border-blue-200 hover:bg-gray-50'"
         >
-          <input
-            type="checkbox"
-            :checked="selectedDepartments.includes(dept)"
-            @change="toggleDepartment(dept)"
-            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
+          <!-- Indicateur de sélection -->
+          <span
+            class="absolute right-2 top-2 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold transition"
+            :class="selectedDepartments.includes(dept)
+              ? 'bg-blue-500 text-white'
+              : 'border border-gray-300 bg-white text-transparent'"
+          >✓</span>
+
+          <!-- Avatar département -->
           <div
-            class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white"
+            class="flex h-10 w-10 items-center justify-center rounded-xl text-base font-bold text-white transition"
             :class="selectedDepartments.includes(dept) ? 'bg-blue-500' : 'bg-gray-300'"
           >
             {{ dept[0] }}
           </div>
-          <span class="text-sm text-gray-700">{{ dept }}</span>
-        </label>
+
+          <span
+            class="text-xs font-medium leading-tight"
+            :class="selectedDepartments.includes(dept) ? 'text-blue-700' : 'text-gray-600'"
+          >
+            {{ dept }}
+          </span>
+        </button>
       </div>
 
-      <p v-if="selectedDepartments.length > 0" class="text-xs text-blue-600">
-        {{ selectedDepartments.length }} département{{ selectedDepartments.length > 1 ? 's' : '' }} sélectionné{{ selectedDepartments.length > 1 ? 's' : '' }}
-      </p>
-      <p v-else class="text-xs text-gray-400">
-        Aucun département sélectionné — le sondage sera visible par tous si publié.
-      </p>
+      <!-- Compteur / message d'état -->
+      <div
+        class="flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm"
+        :class="selectedDepartments.length > 0
+          ? 'bg-blue-50 text-blue-700'
+          : 'bg-amber-50 text-amber-700'"
+      >
+        <Users class="h-4 w-4 shrink-0" />
+        <span v-if="selectedDepartments.length > 0">
+          <strong>{{ selectedDepartments.length }} département{{ selectedDepartments.length > 1 ? 's' : '' }}</strong>
+          sélectionné{{ selectedDepartments.length > 1 ? 's' : '' }} :
+          {{ selectedDepartments.join(', ') }}
+        </span>
+        <span v-else>
+          Aucun département sélectionné — sélectionnez au moins un département pour pouvoir publier le sondage.
+        </span>
+      </div>
     </div>
 
-    <!-- QUESTIONS -->
+    <!-- ─── ÉTAPE 3 — QUESTIONS ──────────────────────────────────────────── -->
     <div class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h2 class="text-base font-semibold text-gray-800">
-          Questions
-          <span class="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-600">
-            {{ questions.length }}
-          </span>
-        </h2>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">3</span>
+          <h2 class="text-base font-semibold text-gray-800">Questions</h2>
+        </div>
+        <span class="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-600">
+          {{ questions.length }} question{{ questions.length > 1 ? 's' : '' }}
+        </span>
       </div>
 
+      <!-- Carte question -->
       <div
         v-for="(question, index) in questions"
         :key="question.id"
-        class="rounded-xl border bg-white shadow-sm overflow-hidden"
+        class="overflow-hidden rounded-xl border bg-white shadow-sm"
       >
-        <!-- En-tête question -->
+        <!-- En-tête -->
         <div class="flex items-center gap-3 border-b bg-gray-50 px-4 py-3">
           <GripVertical class="h-4 w-4 text-gray-300" />
           <span class="text-sm font-semibold text-gray-600">Question {{ index + 1 }}</span>
-          <div class="ml-auto flex items-center gap-2">
+          <div class="ml-auto flex items-center gap-3">
             <label class="flex cursor-pointer items-center gap-1.5 text-xs text-gray-500">
               <input
                 type="checkbox"
@@ -320,40 +381,40 @@ const handleSave = async (status: 'draft' | 'active') => {
           </div>
         </div>
 
-        <!-- Corps question -->
-        <div class="p-4 space-y-3">
+        <!-- Corps -->
+        <div class="space-y-3 p-4">
           <input
             v-model="question.question_text"
             type="text"
-            :placeholder="`Saisissez votre question ${index + 1}...`"
+            :placeholder="`Saisissez la question ${index + 1}...`"
             class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
           />
 
           <select
             v-model="question.question_type"
             @change="onTypeChange(question)"
-            class="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 bg-white"
+            class="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
           >
             <option v-for="(label, key) in questionTypeLabels" :key="key" :value="key">
               {{ label }}
             </option>
           </select>
 
-          <!-- Prévisualisation du type -->
+          <!-- Aperçu Likert -->
           <div v-if="question.question_type === 'likert'" class="rounded-lg bg-gray-50 p-3">
             <p class="mb-2 text-xs text-gray-500">Aperçu :</p>
-            <div class="flex gap-2">
+            <div class="flex gap-4">
               <label v-for="n in 5" :key="n" class="flex flex-col items-center gap-1">
                 <input type="radio" disabled class="h-4 w-4" />
                 <span class="text-xs text-gray-500">{{ n }}</span>
               </label>
             </div>
             <div class="mt-1 flex justify-between text-xs text-gray-400">
-              <span>Pas du tout</span>
-              <span>Tout à fait</span>
+              <span>Pas du tout</span><span>Tout à fait</span>
             </div>
           </div>
 
+          <!-- Aperçu étoiles -->
           <div v-if="question.question_type === 'rating'" class="rounded-lg bg-gray-50 p-3">
             <p class="mb-2 text-xs text-gray-500">Aperçu :</p>
             <div class="flex gap-1 text-2xl text-amber-400">
@@ -361,23 +422,17 @@ const handleSave = async (status: 'draft' | 'active') => {
             </div>
           </div>
 
+          <!-- Aperçu texte libre -->
           <div v-if="question.question_type === 'open_text'" class="rounded-lg bg-gray-50 p-3">
             <p class="mb-2 text-xs text-gray-500">Aperçu :</p>
             <div class="h-16 rounded border border-dashed border-gray-300 bg-white" />
           </div>
 
-          <!-- OPTIONS (choix multiples / cases à cocher) -->
+          <!-- Options (choix multiple / cases à cocher) -->
           <div v-if="needsOptions(question.question_type)" class="space-y-2">
             <p class="text-xs font-medium text-gray-600">Options de réponse :</p>
-            <div
-              v-for="(opt, i) in question.options"
-              :key="i"
-              class="flex items-center gap-2"
-            >
-              <component
-                :is="question.question_type === 'checkbox' ? 'div' : 'div'"
-                class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-gray-300"
-              />
+            <div v-for="(_, i) in question.options" :key="i" class="flex items-center gap-2">
+              <div class="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 border-gray-300" />
               <input
                 v-model="question.options[i]"
                 type="text"
@@ -393,16 +448,15 @@ const handleSave = async (status: 'draft' | 'active') => {
             </div>
             <button
               @click="addOption(question)"
-              class="flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700"
+              class="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700"
             >
-              <Plus class="h-3.5 w-3.5" />
-              Ajouter une option
+              <Plus class="h-3.5 w-3.5" /> Ajouter une option
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Bouton ajouter question -->
+      <!-- Ajouter une question -->
       <button
         @click="addQuestion"
         class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 py-4 text-sm font-medium text-gray-500 transition hover:border-blue-400 hover:bg-blue-50 hover:text-blue-600"
@@ -412,34 +466,41 @@ const handleSave = async (status: 'draft' | 'active') => {
       </button>
     </div>
 
-    <!-- ACTIONS -->
-    <div class="flex justify-end gap-3 pb-8">
+    <!-- ─── ACTIONS ───────────────────────────────────────────────────────── -->
+    <div class="flex items-center justify-between rounded-xl border bg-white px-6 py-4 shadow-sm">
       <NuxtLink
         to="/grh/surveys"
-        class="rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+        class="text-sm font-medium text-gray-500 hover:text-gray-700"
       >
-        Annuler
+        ← Annuler
       </NuxtLink>
-      <button
-        @click="handleSave('draft')"
-        :disabled="loading"
-        class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
-      >
-        <Save class="h-4 w-4" />
-        Enregistrer brouillon
-      </button>
-      <button
-        @click="handleSave('active')"
-        :disabled="loading"
-        class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700 disabled:opacity-50"
-      >
-        <svg v-if="loading" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-        <Send v-else class="h-4 w-4" />
-        {{ loading ? 'Enregistrement...' : 'Publier le sondage' }}
-      </button>
+
+      <div class="flex gap-3">
+        <!-- Brouillon -->
+        <button
+          @click="handleSave('draft')"
+          :disabled="loading"
+          class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+        >
+          <Save class="h-4 w-4" />
+          Enregistrer en brouillon
+        </button>
+
+        <!-- Publier -->
+        <button
+          @click="handleSave('active')"
+          :disabled="loading"
+          class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-50"
+          :title="selectedDepartments.length === 0 ? 'Sélectionnez au moins un département' : ''"
+        >
+          <svg v-if="loading" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <Send v-else class="h-4 w-4" />
+          {{ loading ? 'Publication en cours...' : 'Publier le sondage' }}
+        </button>
+      </div>
     </div>
 
   </div>
