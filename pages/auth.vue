@@ -4,7 +4,7 @@ definePageMeta({ layout: false })
 import { ref } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useRegistrationRequestStore } from '~/stores/registrationRequest'
-import { ArrowLeft, Send, LogIn, UserPlus } from 'lucide-vue-next'
+import { ArrowLeft, Send, LogIn, UserPlus, Eye, EyeOff } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const requestStore = useRegistrationRequestStore()
@@ -15,8 +15,9 @@ const view = ref<'login' | 'request' | 'success'>('login')
 // ── Connexion ────────────────────────────────────────────────────────────────
 const email    = ref('')
 const password = ref('')
-const loginLoading = ref(false)
-const loginError   = ref('')
+const loginLoading   = ref(false)
+const loginError     = ref('')
+const showPassword   = ref(false)
 
 const handleLogin = async () => {
   loginError.value = ''
@@ -121,14 +122,25 @@ const resetRequest = () => {
 
             <div>
               <label class="mb-1.5 block text-sm font-medium text-gray-700">Mot de passe</label>
-              <input
-                v-model="password"
-                type="password"
-                required
-                autocomplete="current-password"
-                placeholder="••••••••"
-                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
-              />
+              <div class="relative">
+                <input
+                  v-model="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  required
+                  autocomplete="current-password"
+                  placeholder="••••••••"
+                  class="w-full rounded-xl border border-gray-200 px-4 py-3 pr-11 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
+                />
+                <button
+                  type="button"
+                  @click="showPassword = !showPassword"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-600"
+                  :aria-label="showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'"
+                >
+                  <EyeOff v-if="showPassword" class="h-4 w-4" />
+                  <Eye v-else class="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             <p v-if="loginError" class="rounded-lg bg-red-50 px-4 py-2.5 text-sm text-red-600">

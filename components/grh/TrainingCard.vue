@@ -21,18 +21,6 @@ const totalParticipants = computed(() =>
   props.categories.reduce((a, c) => a + c.participants, 0)
 )
 
-const categoryConfig: Record<string, { bar: string; badge: string; dot: string }> = {
-  Informatique:  { bar: 'bg-purple-500', badge: 'bg-purple-100 text-purple-700', dot: 'bg-purple-500' },
-  Management:    { bar: 'bg-teal-500',   badge: 'bg-teal-50 text-teal-700',     dot: 'bg-teal-500'   },
-  'Soft Skills': { bar: 'bg-pink-500',   badge: 'bg-pink-100 text-pink-700',     dot: 'bg-pink-500'   },
-  Technique:     { bar: 'bg-orange-500', badge: 'bg-orange-100 text-orange-700', dot: 'bg-orange-500' },
-  Sécurité:      { bar: 'bg-red-500',    badge: 'bg-red-100 text-red-700',       dot: 'bg-red-500'    },
-  Juridique:     { bar: 'bg-indigo-500', badge: 'bg-indigo-100 text-indigo-700', dot: 'bg-indigo-500' },
-  Finance:       { bar: 'bg-green-500',  badge: 'bg-green-100 text-green-700',   dot: 'bg-green-500'  },
-  Autre:         { bar: 'bg-gray-400',   badge: 'bg-gray-100 text-gray-600',     dot: 'bg-gray-400'   }
-}
-
-const cfg = (cat: string) => categoryConfig[cat] ?? categoryConfig.Autre
 </script>
 
 <template>
@@ -72,11 +60,8 @@ const cfg = (cat: string) => categoryConfig[cat] ?? categoryConfig.Autre
       <div v-for="cat in categories" :key="cat.category">
         <div class="mb-1.5 flex items-center justify-between text-sm">
           <div class="flex items-center gap-2">
-            <!-- Indicateur couleur -->
-            <span
-              class="flex h-5 w-5 shrink-0 items-center justify-center rounded text-xs font-bold text-white"
-              :class="cfg(cat.category).dot"
-            >
+            <!-- Indicateur catégorie -->
+            <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-slate-700 text-xs font-bold text-white">
               {{ cat.category[0] }}
             </span>
             <span class="font-medium text-gray-800">{{ cat.category }}</span>
@@ -91,8 +76,7 @@ const cfg = (cat: string) => categoryConfig[cat] ?? categoryConfig.Autre
         <!-- Barre de demande -->
         <div class="h-2 w-full overflow-hidden rounded-full bg-gray-100">
           <div
-            class="h-full rounded-full transition-all duration-700 ease-out"
-            :class="cfg(cat.category).bar"
+            class="h-full rounded-full bg-teal-500 transition-all duration-700 ease-out"
             :style="{ width: `${Math.round((cat.participants / maxParticipants) * 100)}%` }"
           />
         </div>

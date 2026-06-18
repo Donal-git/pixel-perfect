@@ -13,26 +13,6 @@ const props = defineProps<{
   departments: DeptActivity[]
 }>()
 
-const maxScore = computed(() =>
-  Math.max(...props.departments.map(d => d.participants + d.surveysReceived * 10), 1)
-)
-
-/** Heatmap color based on engagement score */
-const avatarColor = (d: DeptActivity) => {
-  const score = d.participants + d.surveysReceived * 10
-  const pct = (score / maxScore.value) * 100
-  if (pct >= 66) return 'bg-teal-600'
-  if (pct >= 33) return 'bg-teal-400'
-  return 'bg-slate-300'
-}
-
-const engagementLabel = (d: DeptActivity) => {
-  const score = d.participants + d.surveysReceived * 10
-  const pct = (score / maxScore.value) * 100
-  if (pct >= 66) return { text: 'Très actif', class: 'bg-teal-50 text-teal-700' }
-  if (pct >= 33) return { text: 'Actif', class: 'bg-green-100 text-green-700' }
-  return { text: 'Peu actif', class: 'bg-gray-100 text-gray-500' }
-}
 </script>
 
 <template>
@@ -68,10 +48,7 @@ const engagementLabel = (d: DeptActivity) => {
         class="flex items-center gap-3 rounded-lg border border-gray-100 bg-gray-50/50 px-4 py-3 transition hover:bg-gray-50"
       >
         <!-- Avatar initiale -->
-        <div
-          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white transition"
-          :class="avatarColor(dept)"
-        >
+        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-700 text-xs font-bold text-white">
           {{ dept.name[0] }}
         </div>
 
@@ -96,11 +73,8 @@ const engagementLabel = (d: DeptActivity) => {
           <p class="text-xs text-gray-400">participants</p>
         </div>
 
-        <span
-          class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
-          :class="engagementLabel(dept).class"
-        >
-          {{ engagementLabel(dept).text }}
+        <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+          {{ dept.participants }} participants
         </span>
       </div>
     </div>
