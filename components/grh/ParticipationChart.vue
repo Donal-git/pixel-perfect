@@ -12,18 +12,6 @@ const props = defineProps<{
   departments: DeptParticipation[]
 }>()
 
-const barColor = (rate: number) => {
-  if (rate >= 80) return 'bg-green-500'
-  if (rate >= 65) return 'bg-amber-400'
-  return 'bg-red-400'
-}
-
-const rateColor = (rate: number) => {
-  if (rate >= 80) return 'text-green-700'
-  if (rate >= 65) return 'text-amber-700'
-  return 'text-red-600'
-}
-
 const avgRate = computed(() => {
   if (!props.departments.length) return 0
   return Math.round(
@@ -42,26 +30,11 @@ const avgRate = computed(() => {
         <p class="mt-0.5 text-xs text-gray-400">Taux de réponse estimé — basé sur les sondages envoyés</p>
       </div>
       <div v-if="departments.length > 0" class="text-right">
-        <p class="text-xl font-bold" :class="rateColor(avgRate)">{{ avgRate }}%</p>
+        <p class="text-xl font-bold text-slate-700">{{ avgRate }}%</p>
         <p class="text-xs text-gray-400">moyenne</p>
       </div>
     </div>
 
-    <!-- Légende -->
-    <div v-if="departments.length > 0" class="mb-4 flex flex-wrap gap-3 text-xs text-gray-500">
-      <span class="flex items-center gap-1.5">
-        <span class="inline-block h-2 w-2 rounded-full bg-green-500"></span>
-        Bon (≥ 80 %)
-      </span>
-      <span class="flex items-center gap-1.5">
-        <span class="inline-block h-2 w-2 rounded-full bg-amber-400"></span>
-        Moyen (65–79 %)
-      </span>
-      <span class="flex items-center gap-1.5">
-        <span class="inline-block h-2 w-2 rounded-full bg-red-400"></span>
-        Faible (< 65 %)
-      </span>
-    </div>
 
     <!-- État vide -->
     <div
@@ -86,30 +59,20 @@ const avgRate = computed(() => {
         <div class="mb-1.5 flex items-center justify-between text-sm">
           <div class="flex items-center gap-2">
             <!-- Initiale département -->
-            <div
-              class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white"
-              :class="barColor(dept.rate)"
-            >
+            <div class="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-700 text-xs font-bold text-white">
               {{ dept.name[0] }}
             </div>
             <span class="font-medium text-gray-800">{{ dept.name }}</span>
             <span class="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
               {{ dept.surveysCount }} sondage{{ dept.surveysCount > 1 ? 's' : '' }}
             </span>
-            <span
-              v-if="dept.activeCount > 0"
-              class="rounded-full bg-green-100 px-1.5 py-0.5 text-xs text-green-700"
-            >
-              {{ dept.activeCount }} actif{{ dept.activeCount > 1 ? 's' : '' }}
-            </span>
           </div>
-          <span class="font-bold" :class="rateColor(dept.rate)">{{ dept.rate }}%</span>
+          <span class="font-bold text-slate-700">{{ dept.rate }}%</span>
         </div>
 
         <div class="h-2.5 w-full overflow-hidden rounded-full bg-gray-100">
           <div
-            class="h-full rounded-full transition-all duration-700 ease-out"
-            :class="barColor(dept.rate)"
+            class="h-full rounded-full bg-teal-500 transition-all duration-700 ease-out"
             :style="{ width: `${dept.rate}%` }"
           />
         </div>

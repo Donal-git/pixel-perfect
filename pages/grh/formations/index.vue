@@ -85,16 +85,6 @@ const levelConfig: Record<Formation['level'], { label: string; class: string }> 
   avancé:        { label: 'Avancé',         class: 'bg-red-50 text-red-700'        }
 }
 
-const categoryColors: Record<string, string> = {
-  Informatique:  'bg-purple-100 text-purple-700',
-  Management:    'bg-teal-50 text-teal-700',
-  'Soft Skills': 'bg-pink-100 text-pink-700',
-  Technique:     'bg-orange-100 text-orange-700',
-  Sécurité:      'bg-red-100 text-red-700',
-  Juridique:     'bg-indigo-100 text-indigo-700',
-  Finance:       'bg-green-100 text-green-700',
-  Autre:         'bg-gray-100 text-gray-600'
-}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const formatDate = (dateStr?: string) => {
@@ -350,10 +340,7 @@ const confirmDelete = async () => {
         <div class="flex items-start justify-between p-5 pb-3">
           <div class="flex-1 min-w-0">
             <div class="flex flex-wrap items-center gap-2 mb-2">
-              <span
-                class="rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="categoryColors[formation.category] || 'bg-gray-100 text-gray-600'"
-              >{{ formation.category }}</span>
+              <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{{ formation.category }}</span>
               <span
                 class="rounded-full px-2 py-0.5 text-xs font-medium"
                 :class="levelConfig[formation.level]?.class"

@@ -108,16 +108,6 @@ const roleConfig = {
   employee: { label: 'Employé', class: 'bg-gray-100 text-gray-600 border-gray-200' }
 }
 
-const deptColors: Record<string, string> = {
-  Direction: 'bg-violet-100 text-violet-700',
-  RH: 'bg-pink-100 text-pink-700',
-  Finance: 'bg-green-100 text-green-700',
-  IT: 'bg-cyan-100 text-cyan-700',
-  Commercial: 'bg-orange-100 text-orange-700',
-  Production: 'bg-amber-100 text-amber-700',
-  Marketing: 'bg-rose-100 text-rose-700',
-  Logistique: 'bg-teal-100 text-teal-700'
-}
 
 const avatarColor = (name: string) => {
   const colors = [
@@ -414,10 +404,7 @@ onUnmounted(() => {
 
               <!-- Département -->
               <td class="px-5 py-3.5">
-                <span
-                  class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium"
-                  :class="deptColors[member.department] || 'bg-gray-100 text-gray-600'"
-                >
+                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
                   {{ member.department }}
                 </span>
               </td>
