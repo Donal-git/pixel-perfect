@@ -68,13 +68,10 @@ const isActive = (href: string) =>
     <aside class="hidden w-60 flex-col bg-slate-900 lg:flex">
 
       <!-- Logo -->
-      <div class="flex h-16 items-center justify-between border-b border-slate-700/50 px-5">
+      <div class="flex h-16 items-center border-b border-slate-700/50 px-5">
         <div class="rounded-lg bg-white px-2.5 py-1">
           <img src="/logo.png" alt="EchoRH" class="h-6 w-auto object-contain" />
         </div>
-        <span class="rounded-full bg-teal-500/15 px-2.5 py-0.5 text-xs font-medium capitalize text-teal-400">
-          {{ authStore.role }}
-        </span>
       </div>
 
       <!-- Navigation -->
@@ -93,26 +90,6 @@ const isActive = (href: string) =>
         </NuxtLink>
       </nav>
 
-      <!-- User section -->
-      <div class="border-t border-slate-700/50 p-4">
-        <div class="mb-2 flex items-center gap-3 rounded-lg px-2 py-2">
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-500/20 text-xs font-bold text-teal-400">
-            {{ authStore.user?.email?.[0]?.toUpperCase() || 'U' }}
-          </div>
-          <div class="min-w-0 flex-1">
-            <p class="truncate text-xs font-medium text-slate-300">
-              {{ authStore.user?.email }}
-            </p>
-          </div>
-        </div>
-        <button
-          class="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-200"
-          @click="handleSignOut"
-        >
-          <LogOut class="h-4 w-4 shrink-0" />
-          Déconnexion
-        </button>
-      </div>
     </aside>
 
     <!-- ── Main ─────────────────────────────────────────────────────────── -->
@@ -128,10 +105,31 @@ const isActive = (href: string) =>
           <h2 class="text-sm font-semibold text-slate-900">{{ currentLabel }}</h2>
         </div>
 
-        <div class="flex items-center gap-1">
+        <div class="flex items-center gap-3">
+          <!-- Bell -->
           <button class="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100">
             <Bell class="h-4 w-4" />
           </button>
+
+          <!-- User info + logout (desktop) -->
+          <div class="hidden lg:flex items-center gap-3 border-l border-slate-200 pl-3">
+            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-500/20 text-xs font-bold text-teal-600">
+              {{ authStore.user?.email?.[0]?.toUpperCase() || 'U' }}
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="truncate text-xs font-medium text-slate-700 max-w-[160px]">{{ authStore.user?.email }}</span>
+              <span class="text-[11px] capitalize text-slate-400">{{ authStore.role }}</span>
+            </div>
+            <button
+              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-red-500"
+              title="Déconnexion"
+              @click="handleSignOut"
+            >
+              <LogOut class="h-4 w-4" />
+            </button>
+          </div>
+
+          <!-- Logout mobile only -->
           <button
             class="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 lg:hidden"
             @click="handleSignOut"
