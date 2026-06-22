@@ -316,131 +316,119 @@ const confirmDelete = async () => {
       </select>
     </div>
 
-    <!-- ── LISTE VIDE ─────────────────────────────────────────────────────── -->
-    <div
-      v-if="filteredFormations.length === 0"
-      class="flex flex-col items-center justify-center rounded-xl border bg-white py-16 text-center shadow-sm"
-    >
-      <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
-        <GraduationCap class="h-8 w-8 text-gray-400" />
+    <!-- ── LISTE DES FORMATIONS ─────────────────────────────────────────── -->
+    <div class="rounded-xl border bg-white shadow-sm">
+      <div class="border-b px-6 py-4">
+        <h2 class="font-semibold text-gray-800">
+          Toutes les formations
+          <span class="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+            {{ filteredFormations.length }}
+          </span>
+        </h2>
       </div>
-      <p class="mt-4 text-sm font-medium text-gray-900">Aucune formation trouvée</p>
-      <p class="mt-1 text-xs text-gray-500">Modifiez vos filtres ou créez une nouvelle formation.</p>
-    </div>
 
-    <!-- ── GRILLE DES FORMATIONS ──────────────────────────────────────────── -->
-    <div v-else class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div
-        v-for="formation in filteredFormations"
-        :key="formation.id"
-        class="flex flex-col rounded-xl border bg-white shadow-sm transition hover:shadow-md"
-        :class="formation.status === 'brouillon' ? 'border-dashed border-amber-200 bg-amber-50/20' : ''"
-      >
-        <!-- En-tête de carte -->
-        <div class="flex items-start justify-between p-5 pb-3">
-          <div class="flex-1 min-w-0">
-            <div class="flex flex-wrap items-center gap-2 mb-2">
-              <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{{ formation.category }}</span>
+      <!-- VIDE -->
+      <div v-if="filteredFormations.length === 0" class="flex flex-col items-center justify-center py-16 text-center">
+        <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
+          <GraduationCap class="h-8 w-8 text-gray-400" />
+        </div>
+        <p class="mt-4 text-sm font-medium text-gray-900">Aucune formation trouvée</p>
+        <p class="mt-1 text-xs text-gray-500">Modifiez vos filtres ou créez une nouvelle formation.</p>
+      </div>
+
+      <!-- LISTE -->
+      <div v-else class="divide-y">
+        <div
+          v-for="formation in filteredFormations"
+          :key="formation.id"
+          class="group flex items-center gap-4 px-6 py-4 transition hover:bg-gray-50"
+        >
+          <!-- Icône statut -->
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+            :class="{
+              'bg-amber-100': formation.status === 'brouillon',
+              'bg-green-100': formation.status === 'disponible',
+              'bg-teal-100':  formation.status === 'en_cours',
+              'bg-gray-100':  formation.status === 'terminée'
+            }"
+          >
+            <FileText    v-if="formation.status === 'brouillon'"  class="h-5 w-5 text-amber-600" />
+            <CheckCircle2 v-else-if="formation.status === 'disponible'" class="h-5 w-5 text-green-600" />
+            <PlayCircle   v-else-if="formation.status === 'en_cours'"   class="h-5 w-5 text-teal-600" />
+            <Archive      v-else                                         class="h-5 w-5 text-gray-500" />
+          </div>
+
+          <!-- Infos -->
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <p class="truncate text-sm font-semibold text-gray-900">{{ formation.title }}</p>
               <span
-                class="rounded-full px-2 py-0.5 text-xs font-medium"
+                class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
+                :class="statusConfig[formation.status]?.class"
+              >{{ statusConfig[formation.status]?.label }}</span>
+              <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{{ formation.category }}</span>
+              <span
+                class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
                 :class="levelConfig[formation.level]?.class"
               >{{ levelConfig[formation.level]?.label }}</span>
             </div>
-            <h3 class="text-sm font-bold text-gray-900 leading-snug">{{ formation.title }}</h3>
+            <p class="mt-0.5 truncate text-xs text-gray-500">{{ formation.description || 'Aucune description' }}</p>
+            <div class="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-gray-400">
+              <span class="flex items-center gap-1">
+                <BookOpen class="h-3 w-3" />
+                {{ formatDate(formation.created_at) }}
+              </span>
+              <span v-if="formation.duration" class="flex items-center gap-1">
+                <Clock class="h-3 w-3" />
+                {{ formation.duration }}
+              </span>
+              <span class="flex items-center gap-1">
+                <Users class="h-3 w-3" />
+                {{ formation.participants }} participant{{ formation.participants > 1 ? 's' : '' }}
+              </span>
+              <span v-if="formatDateRange(formation)" class="flex items-center gap-1">
+                <Calendar class="h-3 w-3" />
+                {{ formatDateRange(formation) }}
+              </span>
+              <span v-if="formation.departments.length > 0" class="flex items-center gap-1 text-teal-600">
+                <Building2 class="h-3 w-3" />
+                {{ formation.departments.includes('Tous les départements') ? 'Tous les départements' : formation.departments.join(', ') }}
+              </span>
+            </div>
           </div>
-          <span
-            class="ml-2 shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
-            :class="statusConfig[formation.status]?.class"
-          >{{ statusConfig[formation.status]?.label }}</span>
-        </div>
 
-        <!-- Description -->
-        <p class="px-5 text-xs text-gray-500 leading-relaxed line-clamp-2">{{ formation.description }}</p>
+          <!-- Actions -->
+          <div class="flex shrink-0 items-center gap-2">
+            <button
+              v-if="formation.status === 'brouillon'"
+              @click="handlePublishDirect(formation.id)"
+              :disabled="publishingId === formation.id"
+              class="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-green-700 disabled:opacity-50"
+            >
+              <svg v-if="publishingId === formation.id" class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <Send v-else class="h-3.5 w-3.5" />
+              {{ publishingId === formation.id ? 'Envoi...' : 'Envoyer' }}
+            </button>
 
-        <!-- Dates -->
-        <div
-          v-if="formatDateRange(formation)"
-          class="mt-3 px-5 flex items-center gap-1.5 text-xs text-gray-500"
-        >
-          <Calendar class="h-3.5 w-3.5 shrink-0 text-gray-400" />
-          <span>{{ formatDateRange(formation) }}</span>
-        </div>
+            <button
+              @click="openEditModal(formation.id)"
+              class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-600"
+            >
+              <Pencil class="h-3.5 w-3.5" />
+              Modifier
+            </button>
 
-        <!-- Méta -->
-        <div class="mt-3 px-5 flex flex-wrap gap-3 text-xs text-gray-500">
-          <span class="flex items-center gap-1">
-            <Clock class="h-3.5 w-3.5 text-gray-400" />
-            {{ formation.duration }}
-          </span>
-          <span class="flex items-center gap-1">
-            <Users class="h-3.5 w-3.5 text-gray-400" />
-            {{ formation.participants }} participant{{ formation.participants > 1 ? 's' : '' }}
-          </span>
-          <span class="flex items-center gap-1">
-            <BookOpen class="h-3.5 w-3.5 text-gray-400" />
-            {{ formatDate(formation.created_at) }}
-          </span>
-        </div>
-
-        <!-- Départements destinataires -->
-        <div class="mt-3 px-5">
-          <div class="flex items-center gap-1.5 mb-1.5">
-            <Building2 class="h-3.5 w-3.5 text-gray-400" />
-            <span class="text-xs text-gray-400">Destinataires</span>
+            <button
+              @click="openDeleteModal(formation.id)"
+              class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+            >
+              <Trash2 class="h-3.5 w-3.5" />
+            </button>
           </div>
-          <div class="flex flex-wrap gap-1">
-            <span
-              v-if="formation.departments.includes('Tous les départements')"
-              class="rounded-md bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-600"
-            >Tous les départements</span>
-            <template v-else>
-              <span
-                v-for="dept in formation.departments.slice(0, 4)"
-                :key="dept"
-                class="rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
-              >{{ dept }}</span>
-              <span
-                v-if="formation.departments.length > 4"
-                class="rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-400"
-              >+{{ formation.departments.length - 4 }}</span>
-              <span
-                v-if="formation.departments.length === 0"
-                class="rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-400 italic"
-              >Aucun</span>
-            </template>
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="mt-auto flex gap-2 border-t p-4">
-          <!-- Bouton Envoyer (brouillons uniquement) -->
-          <button
-            v-if="formation.status === 'brouillon'"
-            @click="handlePublishDirect(formation.id)"
-            :disabled="publishingId === formation.id"
-            class="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-green-600 py-2 text-xs font-medium text-white transition hover:bg-green-700 disabled:opacity-50"
-          >
-            <svg v-if="publishingId === formation.id" class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-            <Send v-else class="h-3.5 w-3.5" />
-            {{ publishingId === formation.id ? 'Envoi...' : 'Envoyer' }}
-          </button>
-
-          <button
-            @click="openEditModal(formation.id)"
-            class="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 py-2 text-xs font-medium text-gray-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-600"
-          >
-            <Pencil class="h-3.5 w-3.5" />
-            Modifier
-          </button>
-          <button
-            @click="openDeleteModal(formation.id)"
-            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
-          >
-            <Trash2 class="h-3.5 w-3.5" />
-          </button>
         </div>
       </div>
     </div>
