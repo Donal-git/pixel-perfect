@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import {
   ClipboardList, GraduationCap, CheckCircle2, Clock,
-  BookOpen, User, ChevronRight, Calendar
+  BookOpen, User, ChevronRight, Calendar, LayoutList, LayoutGrid
 } from 'lucide-vue-next'
 import { useAuthStore } from '~/stores/auth'
 import { useSurveyStore } from '~/stores/survey'
@@ -19,6 +19,7 @@ const currentUser = computed(() => authStore.user)
 const surveys = ref<any[]>([])
 const formations = ref<any[]>([])
 const myFormations = ref<any[]>([])
+const formationViewMode = ref<'grid' | 'list'>('grid')
 const respondedSurveys = ref<Set<string>>(new Set())
 const loading = ref(true)
 
@@ -233,9 +234,32 @@ const levelClass = (level: string) => ({
             <GraduationCap class="h-4 w-4 text-slate-400" />
             Formations disponibles
           </h2>
-          <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-            {{ formations.length }} disponibles
-          </span>
+          <div class="flex items-center gap-2">
+            <!-- Toggle vue liste / grille -->
+            <div class="flex items-center rounded-lg border border-slate-200 bg-slate-50 p-0.5 gap-0.5">
+              <button
+                @click="formationViewMode = 'grid'"
+                title="Vue grille"
+                class="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition"
+                :class="formationViewMode === 'grid' ? 'bg-teal-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'"
+              >
+                <LayoutGrid class="h-3.5 w-3.5" />
+                Grille
+              </button>
+              <button
+                @click="formationViewMode = 'list'"
+                title="Vue liste"
+                class="flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs font-medium transition"
+                :class="formationViewMode === 'list' ? 'bg-teal-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 hover:bg-white'"
+              >
+                <LayoutList class="h-3.5 w-3.5" />
+                Liste
+              </button>
+            </div>
+            <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
+              {{ formations.length }} disponibles
+            </span>
+          </div>
         </div>
 
         <div v-if="formations.length === 0" class="py-12 text-center">
@@ -243,7 +267,8 @@ const levelClass = (level: string) => ({
           <p class="mt-3 text-sm text-slate-500">Aucune formation disponible pour le moment</p>
         </div>
 
-        <div v-else class="grid gap-4 p-6 md:grid-cols-2 lg:grid-cols-3">
+        <!-- VUE GRILLE -->
+        <div v-else-if="formationViewMode === 'grid'" class="grid gap-4 p-6 md:grid-cols-2 lg:grid-cols-3">
           <div
             v-for="formation in formations"
             :key="formation.id"
@@ -305,6 +330,68 @@ const levelClass = (level: string) => ({
                 v-else
                 @click="isRegisteredForFormation(formation.id) ? unregisterFromFormation(formation.id) : registerForFormation(formation.id)"
                 class="w-full rounded-lg py-2 text-xs font-medium transition"
+                :class="isRegisteredForFormation(formation.id)
+                  ? 'bg-red-50 text-red-700 hover:bg-red-100'
+                  : 'bg-teal-600 text-white hover:bg-teal-700'"
+              >{{ isRegisteredForFormation(formation.id) ? 'Se désinscrire' : "S'inscrire" }}</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VUE LISTE -->
+        <div v-else class="divide-y divide-slate-100">
+          <div
+            v-for="formation in formations"
+            :key="formation.id"
+            class="flex items-center gap-4 px-6 py-4 transition"
+            :class="isFormationExpired(formation) ? 'opacity-70' : 'hover:bg-slate-50'"
+          >
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-50">
+              <GraduationCap class="h-4 w-4 text-teal-600" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="truncate text-sm font-medium text-slate-900">{{ formation.title }}</p>
+                <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{{ formation.category }}</span>
+                <span v-if="isFormationExpired(formation)"
+                  class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">Clôturé</span>
+                <span v-else-if="isRegisteredForFormation(formation.id)"
+                  class="shrink-0 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700">Inscrit</span>
+                <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium" :class="levelClass(formation.level)">{{ formation.level }}</span>
+              </div>
+              <div class="mt-0.5 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                <span v-if="formation.duration" class="flex items-center gap-1">
+                  <Clock class="h-3 w-3" />
+                  {{ formation.duration }}
+                </span>
+                <span v-if="formation.start_date || formation.end_date" class="flex items-center gap-1"
+                  :class="isFormationExpired(formation) ? 'text-red-400' : ''">
+                  <Calendar class="h-3 w-3" />
+                  <template v-if="formation.start_date && formation.end_date">
+                    {{ formatDate(formation.start_date) }} → {{ formatDate(formation.end_date) }}
+                  </template>
+                  <template v-else-if="formation.end_date">Jusqu'au {{ formatDate(formation.end_date) }}</template>
+                  <template v-else>Début : {{ formatDate(formation.start_date) }}</template>
+                </span>
+              </div>
+            </div>
+            <div class="shrink-0">
+              <button
+                v-if="isFormationExpired(formation) && !isRegisteredForFormation(formation.id)"
+                disabled
+                class="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-400 cursor-not-allowed"
+              >Clôturé</button>
+              <div v-else-if="isFormationExpired(formation) && isRegisteredForFormation(formation.id)" class="flex flex-col gap-1 items-end">
+                <span class="rounded-full bg-amber-50 px-2 py-0.5 text-xs text-amber-700">Inscrit · Clôturé</span>
+                <button
+                  @click="unregisterFromFormation(formation.id)"
+                  class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-100"
+                >Se désinscrire</button>
+              </div>
+              <button
+                v-else
+                @click="isRegisteredForFormation(formation.id) ? unregisterFromFormation(formation.id) : registerForFormation(formation.id)"
+                class="rounded-lg px-3 py-1.5 text-xs font-medium transition"
                 :class="isRegisteredForFormation(formation.id)
                   ? 'bg-red-50 text-red-700 hover:bg-red-100'
                   : 'bg-teal-600 text-white hover:bg-teal-700'"
