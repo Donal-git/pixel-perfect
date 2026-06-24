@@ -8,7 +8,6 @@ import { ArrowLeft, Send, LogIn, UserPlus, Eye, EyeOff } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const requestStore = useRegistrationRequestStore()
-const runtimeConfig = useRuntimeConfig()
 
 // ── Vue active : 'login' | 'request' | 'success' ────────────────────────────
 const view = ref<'login' | 'request' | 'success'>('login')
@@ -31,31 +30,21 @@ const handleLogin = async () => {
 }
 
 // ── Demande de compte ────────────────────────────────────────────────────────
-const FALLBACK_DEPARTMENTS = [
-  'Direction',
-  'Ressources Humaines',
-  'Finance & Comptabilité',
-  'Informatique',
-  'Commercial & Vente',
-  'Marketing & Communication',
-  'Juridique',
-  'Logistique & Supply Chain',
-]
+const DEPARTMENTS = ref<string[]>([])
+const loadingDepts = ref(true)
 
-const DEPARTMENTS = ref<string[]>([...FALLBACK_DEPARTMENTS])
+const config = useRuntimeConfig()
 
 onMounted(async () => {
   try {
-    const res = await $fetch<{ data: { name: string; status?: string }[] }>(
-      `${runtimeConfig.public.apiBase}/departments?limit=100`
+    const res = await $fetch<{ data: { name: string }[] }>(
+      `${config.public.apiBase}/departments/active`
     )
-    const active = res.data
-      .filter(d => (d.status ?? 'active') === 'active')
-      .map(d => d.name)
-      .sort()
-    if (active.length > 0) DEPARTMENTS.value = active
-  } catch (e) {
-    console.warn('Départements non chargés depuis l\'API, liste par défaut utilisée.', e)
+    DEPARTMENTS.value = res.data.map(d => d.name).sort()
+  } catch {
+    DEPARTMENTS.value = []
+  } finally {
+    loadingDepts.value = false
   }
 })
 
@@ -249,9 +238,12 @@ const resetRequest = () => {
               <select
                 v-model="form.department"
                 required
-                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white"
+                :disabled="loadingDepts"
+                class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100 bg-white disabled:opacity-50"
               >
-                <option value="" disabled>Sélectionner un département</option>
+                <option value="" disabled>
+                  {{ loadingDepts ? 'Chargement…' : DEPARTMENTS.length === 0 ? 'Aucun département disponible' : 'Sélectionner un département' }}
+                </option>
                 <option v-for="dept in DEPARTMENTS" :key="dept" :value="dept">{{ dept }}</option>
               </select>
             </div>
