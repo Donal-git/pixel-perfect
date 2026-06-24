@@ -31,17 +31,31 @@ const handleLogin = async () => {
 }
 
 // ── Demande de compte ────────────────────────────────────────────────────────
-const DEPARTMENTS = ref<string[]>([])
+const FALLBACK_DEPARTMENTS = [
+  'Direction',
+  'Ressources Humaines',
+  'Finance & Comptabilité',
+  'Informatique',
+  'Commercial & Vente',
+  'Marketing & Communication',
+  'Juridique',
+  'Logistique & Supply Chain',
+]
+
+const DEPARTMENTS = ref<string[]>([...FALLBACK_DEPARTMENTS])
 
 onMounted(async () => {
   try {
     const res = await $fetch<{ data: { name: string; status?: string }[] }>(
       `${runtimeConfig.public.apiBase}/departments?limit=100`
     )
-    const active = res.data.filter(d => (d.status ?? 'active') === 'active').map(d => d.name).sort()
+    const active = res.data
+      .filter(d => (d.status ?? 'active') === 'active')
+      .map(d => d.name)
+      .sort()
     if (active.length > 0) DEPARTMENTS.value = active
-  } catch {
-    // fallback si l'API est inaccessible
+  } catch (e) {
+    console.warn('Départements non chargés depuis l\'API, liste par défaut utilisée.', e)
   }
 })
 
