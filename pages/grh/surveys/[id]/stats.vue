@@ -2,11 +2,13 @@
 import { ref, computed, onMounted } from 'vue'
 import {
   ChevronLeft, Users, ClipboardList, BarChart3,
-  AlertCircle, CheckCircle2, Clock, ChevronDown, UserCheck
+  AlertCircle, CheckCircle2, Clock, ChevronDown, UserCheck,
+  Sparkles, TrendingUp, TrendingDown, Minus
 } from 'lucide-vue-next'
 import { useSurveyStore, type Survey, type SurveyResponse } from '~/stores/survey'
 import { usePersonnelStore } from '~/stores/personnel'
 import { useAuthStore } from '~/stores/auth'
+import { analyzeTexts, type TextAnalysis } from '~/utils/textAnalysis'
 
 const route = useRoute()
 const surveyStore = useSurveyStore()
@@ -68,6 +70,23 @@ const toggleRespondents = (questionId: string, optLabel: string) => {
   const current = openRespondents.value[questionId]
   openRespondents.value[questionId] = current === optLabel ? null : optLabel
 }
+
+// ── Analyse automatique des réponses textuelles ───────────────────────────────
+const openAnalysis = ref<Record<string, boolean>>({})
+
+const toggleAnalysis = (questionId: string) => {
+  openAnalysis.value[questionId] = !openAnalysis.value[questionId]
+}
+
+const textAnalyses = computed(() => {
+  const result: Record<string, TextAnalysis> = {}
+  for (const stat of questionStats.value) {
+    if (stat.type === 'text' && 'texts' in stat) {
+      result[stat.question.id] = analyzeTexts(stat.texts as string[])
+    }
+  }
+  return result
+})
 
 // ── Calcul des statistiques par question ─────────────────────────────────────
 const questionStats = computed(() => {
@@ -471,13 +490,172 @@ const statusConfig: Record<string, { label: string; class: string }> = {
           </div>
 
           <!-- Texte libre -->
-          <div v-else-if="stat.type === 'text'" class="space-y-2">
+          <div v-else-if="stat.type === 'text'" class="space-y-3">
             <div
               v-for="(text, ti) in stat.texts"
               :key="ti"
               class="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm italic text-gray-700 leading-relaxed"
             >
               "{{ text }}"
+            </div>
+
+            <!-- Bouton analyser (à partir de 2 réponses) -->
+            <div v-if="stat.texts && stat.texts.length >= 2" class="pt-1">
+              <button
+                @click="toggleAnalysis(stat.question.id)"
+                class="flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-700 transition hover:bg-indigo-100 active:scale-95"
+              >
+                <Sparkles class="h-4 w-4" />
+                {{ openAnalysis[stat.question.id] ? "Masquer l'analyse" : 'Analyser les réponses' }}
+              </button>
+            </div>
+
+            <!-- Panneau d'analyse -->
+            <div
+              v-if="stat.texts && stat.texts.length >= 2 && openAnalysis[stat.question.id]"
+              class="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-5 space-y-5"
+            >
+              <!-- En-tête -->
+              <div class="flex items-center gap-2 border-b border-indigo-100 pb-3">
+                <Sparkles class="h-4 w-4 text-indigo-600" />
+                <h3 class="text-sm font-semibold text-indigo-900">Analyse automatique des réponses</h3>
+                <span class="ml-auto text-xs text-gray-400">{{ textAnalyses[stat.question.id]?.totalTexts }} réponse(s) analysée(s)</span>
+              </div>
+
+              <!-- KPIs -->
+              <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <!-- Sentiment global -->
+                <div
+                  class="rounded-lg border p-3 text-center"
+                  :class="textAnalyses[stat.question.id]?.sentimentLabel === 'Positif'
+                    ? 'bg-green-50 border-green-100'
+                    : textAnalyses[stat.question.id]?.sentimentLabel === 'Négatif'
+                    ? 'bg-red-50 border-red-100'
+                    : 'bg-amber-50 border-amber-100'"
+                >
+                  <TrendingUp
+                    v-if="textAnalyses[stat.question.id]?.sentimentLabel === 'Positif'"
+                    class="mx-auto mb-1 h-5 w-5 text-green-600"
+                  />
+                  <TrendingDown
+                    v-else-if="textAnalyses[stat.question.id]?.sentimentLabel === 'Négatif'"
+                    class="mx-auto mb-1 h-5 w-5 text-red-600"
+                  />
+                  <Minus v-else class="mx-auto mb-1 h-5 w-5 text-amber-600" />
+                  <p
+                    class="text-xs font-bold"
+                    :class="textAnalyses[stat.question.id]?.sentimentLabel === 'Positif'
+                      ? 'text-green-700'
+                      : textAnalyses[stat.question.id]?.sentimentLabel === 'Négatif'
+                      ? 'text-red-700'
+                      : 'text-amber-700'"
+                  >{{ textAnalyses[stat.question.id]?.sentimentLabel }}</p>
+                  <p class="mt-0.5 text-xs text-gray-400">Sentiment</p>
+                </div>
+
+                <!-- Longueur moyenne -->
+                <div class="rounded-lg border border-blue-100 bg-blue-50 p-3 text-center">
+                  <p class="text-xl font-bold text-blue-700">{{ textAnalyses[stat.question.id]?.avgLength }}</p>
+                  <p class="text-xs text-blue-600">mots / réponse</p>
+                </div>
+
+                <!-- Positives -->
+                <div class="rounded-lg border border-green-100 bg-green-50 p-3 text-center">
+                  <p class="text-xl font-bold text-green-700">{{ textAnalyses[stat.question.id]?.positiveCount }}</p>
+                  <p class="text-xs text-green-600">positives</p>
+                </div>
+
+                <!-- À améliorer -->
+                <div class="rounded-lg border border-red-100 bg-red-50 p-3 text-center">
+                  <p class="text-xl font-bold text-red-700">{{ textAnalyses[stat.question.id]?.negativeCount }}</p>
+                  <p class="text-xs text-red-600">à améliorer</p>
+                </div>
+              </div>
+
+              <!-- Distribution des sentiments -->
+              <div>
+                <p class="mb-2.5 text-xs font-semibold text-gray-600">Distribution des sentiments</p>
+                <div class="space-y-2">
+                  <div class="flex items-center gap-3">
+                    <span class="w-16 shrink-0 text-xs font-medium text-green-700">Positif</span>
+                    <div class="flex-1 overflow-hidden rounded-full bg-gray-100" style="height: 14px;">
+                      <div
+                        class="h-full rounded-full bg-green-400 transition-all duration-700"
+                        :style="{ width: ((textAnalyses[stat.question.id]?.positiveCount ?? 0) / Math.max(textAnalyses[stat.question.id]?.totalTexts ?? 1, 1) * 100) + '%' }"
+                      />
+                    </div>
+                    <span class="w-7 shrink-0 text-right text-xs text-gray-500">{{ textAnalyses[stat.question.id]?.positiveCount }}</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="w-16 shrink-0 text-xs font-medium text-amber-700">Neutre</span>
+                    <div class="flex-1 overflow-hidden rounded-full bg-gray-100" style="height: 14px;">
+                      <div
+                        class="h-full rounded-full bg-amber-400 transition-all duration-700"
+                        :style="{ width: ((textAnalyses[stat.question.id]?.neutralCount ?? 0) / Math.max(textAnalyses[stat.question.id]?.totalTexts ?? 1, 1) * 100) + '%' }"
+                      />
+                    </div>
+                    <span class="w-7 shrink-0 text-right text-xs text-gray-500">{{ textAnalyses[stat.question.id]?.neutralCount }}</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <span class="w-16 shrink-0 text-xs font-medium text-red-700">Négatif</span>
+                    <div class="flex-1 overflow-hidden rounded-full bg-gray-100" style="height: 14px;">
+                      <div
+                        class="h-full rounded-full bg-red-400 transition-all duration-700"
+                        :style="{ width: ((textAnalyses[stat.question.id]?.negativeCount ?? 0) / Math.max(textAnalyses[stat.question.id]?.totalTexts ?? 1, 1) * 100) + '%' }"
+                      />
+                    </div>
+                    <span class="w-7 shrink-0 text-right text-xs text-gray-500">{{ textAnalyses[stat.question.id]?.negativeCount }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mots-clés fréquents -->
+              <div v-if="textAnalyses[stat.question.id]?.topKeywords.length">
+                <p class="mb-2 text-xs font-semibold text-gray-600">Mots-clés les plus fréquents</p>
+                <div class="flex flex-wrap gap-1.5">
+                  <span
+                    v-for="kw in textAnalyses[stat.question.id]?.topKeywords"
+                    :key="kw.word"
+                    :title="`Mentionné dans ${kw.pct}% des réponses`"
+                    class="rounded-full bg-indigo-100 px-3 py-0.5 text-xs font-medium text-indigo-800"
+                  >
+                    {{ kw.word }}<span class="ml-1 text-indigo-400">{{ kw.pct }}%</span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Termes positifs / négatifs -->
+              <div
+                v-if="textAnalyses[stat.question.id]?.positiveWords.length || textAnalyses[stat.question.id]?.negativeWords.length"
+                class="grid gap-4 sm:grid-cols-2"
+              >
+                <div v-if="textAnalyses[stat.question.id]?.positiveWords.length">
+                  <p class="mb-1.5 text-xs font-semibold text-green-700">Points positifs identifiés</p>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span
+                      v-for="w in textAnalyses[stat.question.id]?.positiveWords"
+                      :key="w"
+                      class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800"
+                    >{{ w }}</span>
+                  </div>
+                </div>
+                <div v-if="textAnalyses[stat.question.id]?.negativeWords.length">
+                  <p class="mb-1.5 text-xs font-semibold text-red-700">Points à améliorer</p>
+                  <div class="flex flex-wrap gap-1.5">
+                    <span
+                      v-for="w in textAnalyses[stat.question.id]?.negativeWords"
+                      :key="w"
+                      class="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800"
+                    >{{ w }}</span>
+                  </div>
+                </div>
+              </div>
+              <div
+                v-else
+                class="rounded-lg bg-gray-50 py-3 text-center text-xs text-gray-400"
+              >
+                Aucun terme d'opinion clairement identifiable dans les réponses
+              </div>
             </div>
           </div>
         </div>
