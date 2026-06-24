@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import {
   ChevronLeft, Users, ClipboardList, BarChart3,
-  AlertCircle, CheckCircle2, Clock
+  AlertCircle, CheckCircle2, Clock, ChevronDown, UserCheck
 } from 'lucide-vue-next'
 import { useSurveyStore, type Survey, type SurveyResponse } from '~/stores/survey'
 import { usePersonnelStore } from '~/stores/personnel'
@@ -61,6 +61,14 @@ const isClosed = computed(() =>
   !survey.value ? false : surveyStore.isSurveyExpired(survey.value) || survey.value.status === 'closed'
 )
 
+// ── Affichage des répondants par option (sondage non anonyme) ─────────────────
+const openRespondents = ref<Record<string, string | null>>({})
+
+const toggleRespondents = (questionId: string, optLabel: string) => {
+  const current = openRespondents.value[questionId]
+  openRespondents.value[questionId] = current === optLabel ? null : optLabel
+}
+
 // ── Calcul des statistiques par question ─────────────────────────────────────
 const questionStats = computed(() => {
   if (!survey.value) return []
@@ -74,28 +82,16 @@ const questionStats = computed(() => {
 
     if (question.question_type === 'multiple_choice') {
       const counts: Record<string, number> = {}
-      for (const opt of question.options) counts[opt] = 0
-      for (const a of answers) {
-        if (typeof a === 'string' && counts[a] !== undefined) counts[a]++
-      }
-      const maxCount = Math.max(...Object.values(counts), 1)
-      return {
-        question, type: 'choice', answeredCount,
-        options: question.options.map(opt => ({
-          label: opt,
-          count: counts[opt],
-          pct: answeredCount > 0 ? Math.round((counts[opt] / answeredCount) * 100) : 0,
-          barWidth: Math.round((counts[opt] / maxCount) * 100)
-        }))
-      }
-    }
-
-    if (question.question_type === 'checkbox') {
-      const counts: Record<string, number> = {}
-      for (const opt of question.options) counts[opt] = 0
-      for (const a of answers) {
-        if (Array.isArray(a)) {
-          for (const item of a) if (counts[item] !== undefined) counts[item]++
+      const respondentsByOpt: Record<string, string[]> = {}
+      for (const opt of question.options) { counts[opt] = 0; respondentsByOpt[opt] = [] }
+      for (const resp of submitted.value) {
+        const a = resp.answers[question.id]
+        if (typeof a === 'string' && counts[a] !== undefined) {
+          counts[a]++
+          if (!survey.value?.isAnonymous) {
+            const member = personnelStore.members.find(m => m.id === resp.employee_id)
+            if (member) respondentsByOpt[a].push(member.name)
+          }
         }
       }
       const maxCount = Math.max(...Object.values(counts), 1)
@@ -105,7 +101,39 @@ const questionStats = computed(() => {
           label: opt,
           count: counts[opt],
           pct: answeredCount > 0 ? Math.round((counts[opt] / answeredCount) * 100) : 0,
-          barWidth: Math.round((counts[opt] / maxCount) * 100)
+          barWidth: Math.round((counts[opt] / maxCount) * 100),
+          respondents: respondentsByOpt[opt] ?? []
+        }))
+      }
+    }
+
+    if (question.question_type === 'checkbox') {
+      const counts: Record<string, number> = {}
+      const respondentsByOpt: Record<string, string[]> = {}
+      for (const opt of question.options) { counts[opt] = 0; respondentsByOpt[opt] = [] }
+      for (const resp of submitted.value) {
+        const a = resp.answers[question.id]
+        if (Array.isArray(a)) {
+          const member = !survey.value?.isAnonymous
+            ? personnelStore.members.find(m => m.id === resp.employee_id)
+            : undefined
+          for (const item of a) {
+            if (counts[item] !== undefined) {
+              counts[item]++
+              if (member) respondentsByOpt[item].push(member.name)
+            }
+          }
+        }
+      }
+      const maxCount = Math.max(...Object.values(counts), 1)
+      return {
+        question, type: 'choice', answeredCount,
+        options: question.options.map(opt => ({
+          label: opt,
+          count: counts[opt],
+          pct: answeredCount > 0 ? Math.round((counts[opt] / answeredCount) * 100) : 0,
+          barWidth: Math.round((counts[opt] / maxCount) * 100),
+          respondents: respondentsByOpt[opt] ?? []
         }))
       }
     }
@@ -352,20 +380,58 @@ const statusConfig: Record<string, { label: string; class: string }> = {
           </div>
 
           <!-- Choix multiple / Cases à cocher -->
-          <div v-else-if="stat.type === 'choice'" class="space-y-3">
-            <div v-for="opt in stat.options" :key="opt.label" class="flex items-center gap-3">
-              <span class="w-36 shrink-0 truncate text-xs text-gray-700" :title="opt.label">
-                {{ opt.label }}
-              </span>
-              <div class="flex-1 overflow-hidden rounded-full bg-gray-100" style="height: 20px;">
-                <div
-                  class="h-full rounded-full bg-teal-500 transition-all duration-700"
-                  :style="{ width: opt.barWidth + '%' }"
+          <div v-else-if="stat.type === 'choice'" class="space-y-2">
+            <!-- Badge anonyme -->
+            <p v-if="survey.isAnonymous" class="mb-3 flex items-center gap-1.5 text-xs text-gray-400">
+              <UserCheck class="h-3.5 w-3.5" />
+              Sondage anonyme — les répondants ne sont pas affichés
+            </p>
+
+            <div v-for="opt in stat.options" :key="opt.label" class="rounded-lg border border-transparent transition-colors"
+              :class="!survey.isAnonymous && opt.count > 0 ? 'hover:border-gray-200 hover:bg-gray-50 cursor-pointer' : ''"
+              @click="!survey.isAnonymous && opt.count > 0 && toggleRespondents(stat.question.id, opt.label)"
+            >
+              <!-- Ligne barre -->
+              <div class="flex items-center gap-3 px-2 py-1.5">
+                <span class="w-36 shrink-0 truncate text-xs text-gray-700" :title="opt.label">
+                  {{ opt.label }}
+                </span>
+                <div class="flex-1 overflow-hidden rounded-full bg-gray-100" style="height: 20px;">
+                  <div
+                    class="h-full rounded-full bg-teal-500 transition-all duration-700"
+                    :style="{ width: opt.barWidth + '%' }"
+                  />
+                </div>
+                <span class="w-20 shrink-0 text-right text-xs font-medium text-gray-600">
+                  {{ opt.count }} <span class="text-gray-400">({{ opt.pct }}%)</span>
+                </span>
+                <ChevronDown
+                  v-if="!survey.isAnonymous && opt.count > 0"
+                  class="h-3.5 w-3.5 shrink-0 text-gray-400 transition-transform duration-200"
+                  :class="openRespondents[stat.question.id] === opt.label ? 'rotate-180' : ''"
                 />
+                <span v-else class="h-3.5 w-3.5 shrink-0" />
               </div>
-              <span class="w-20 shrink-0 text-right text-xs font-medium text-gray-600">
-                {{ opt.count }} <span class="text-gray-400">({{ opt.pct }}%)</span>
-              </span>
+
+              <!-- Liste des répondants -->
+              <div
+                v-if="!survey.isAnonymous && openRespondents[stat.question.id] === opt.label"
+                class="mx-2 mb-2 rounded-md bg-teal-50 px-3 py-2"
+              >
+                <p class="mb-1.5 text-xs font-semibold text-teal-700 flex items-center gap-1">
+                  <UserCheck class="h-3.5 w-3.5" />
+                  {{ opt.respondents.length }} personne(s) ont choisi cette réponse
+                </p>
+                <div class="flex flex-wrap gap-1.5">
+                  <span
+                    v-for="name in opt.respondents"
+                    :key="name"
+                    class="rounded-full bg-white border border-teal-200 px-2.5 py-0.5 text-xs text-teal-800 font-medium"
+                  >
+                    {{ name }}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 

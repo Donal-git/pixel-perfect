@@ -3,12 +3,14 @@ import { ref, computed, onMounted } from 'vue'
 import {
   Plus, Pencil, Trash2, X, GraduationCap, Clock, Users, BookOpen,
   Search, CheckCircle2, PlayCircle, Archive, FileText, Send, Calendar,
-  Building2, Save, LayoutList, LayoutGrid
+  Building2, Save, LayoutList, LayoutGrid, ChevronDown, UserCheck
 } from 'lucide-vue-next'
 import { useFormationStore, type Formation } from '~/stores/formation'
+import { usePersonnelStore } from '~/stores/personnel'
 import { useToast } from '~/composables/useToast'
 
 const formationStore = useFormationStore()
+const personnelStore = usePersonnelStore()
 const toast = useToast()
 
 const DEPARTMENTS = ['RH', 'Finance', 'IT', 'Commercial', 'Production', 'Marketing', 'Direction', 'Logistique']
@@ -52,7 +54,49 @@ const isBrouillonContext = computed(() => {
 
 const isAllDepts = computed(() => form.value.departments.includes(ALL_DEPTS))
 
-onMounted(async () => { await formationStore.loadFromStorage() })
+// ── Inscrits par formation ────────────────────────────────────────────────────
+const openFormationId   = ref<string | null>(null)
+const enrolledCache     = ref<Record<string, { name: string; department: string; position: string; status: string }[]>>({})
+const loadingEnrollment = ref<Record<string, boolean>>({})
+
+const toggleEnrollees = async (formationId: string) => {
+  if (openFormationId.value === formationId) {
+    openFormationId.value = null
+    return
+  }
+  openFormationId.value = formationId
+  if (enrolledCache.value[formationId]) return
+  loadingEnrollment.value[formationId] = true
+  try {
+    const regs = await formationStore.getFormationRegistrations(formationId)
+    enrolledCache.value[formationId] = regs.map(r => {
+      const m = personnelStore.members.find(p => p.id === r.employee_id)
+      return {
+        name:       m?.name       ?? '—',
+        department: m?.department ?? '—',
+        position:   m?.position   ?? '—',
+        status:     r.status
+      }
+    })
+  } catch {
+    enrolledCache.value[formationId] = []
+  } finally {
+    loadingEnrollment.value[formationId] = false
+  }
+}
+
+const statusRegConfig: Record<string, { label: string; class: string }> = {
+  inscrit:  { label: 'Inscrit',  class: 'bg-green-100 text-green-700' },
+  en_cours: { label: 'En cours', class: 'bg-teal-100 text-teal-700'  },
+  complété: { label: 'Complété', class: 'bg-gray-100 text-gray-500'  }
+}
+
+onMounted(async () => {
+  await Promise.all([
+    formationStore.loadFromStorage(),
+    personnelStore.loadFromStorage()
+  ])
+})
 
 // ── Filtres ──────────────────────────────────────────────────────────────────
 const filteredFormations = computed(() =>
@@ -360,97 +404,127 @@ const confirmDelete = async () => {
 
       <!-- VUE LISTE -->
       <div v-else-if="viewMode === 'list'" class="divide-y">
-        <div
-          v-for="formation in filteredFormations"
-          :key="formation.id"
-          class="group flex items-center gap-4 px-6 py-4 transition hover:bg-gray-50"
-        >
-          <!-- Icône statut -->
+        <div v-for="formation in filteredFormations" :key="formation.id">
+
+          <!-- Ligne cliquable -->
           <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
-            :class="{
-              'bg-amber-100': formation.status === 'brouillon',
-              'bg-green-100': formation.status === 'disponible',
-              'bg-teal-100':  formation.status === 'en_cours',
-              'bg-gray-100':  formation.status === 'terminée'
-            }"
+            class="group flex items-center gap-4 px-6 py-4 transition hover:bg-gray-50 cursor-pointer"
+            @click="toggleEnrollees(formation.id)"
           >
-            <FileText    v-if="formation.status === 'brouillon'"  class="h-5 w-5 text-amber-600" />
-            <CheckCircle2 v-else-if="formation.status === 'disponible'" class="h-5 w-5 text-green-600" />
-            <PlayCircle   v-else-if="formation.status === 'en_cours'"   class="h-5 w-5 text-teal-600" />
-            <Archive      v-else                                         class="h-5 w-5 text-gray-500" />
-          </div>
-
-          <!-- Infos -->
-          <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <p class="truncate text-sm font-semibold text-gray-900">{{ formation.title }}</p>
-              <span
-                class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="statusConfig[formation.status]?.class"
-              >{{ statusConfig[formation.status]?.label }}</span>
-              <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{{ formation.category }}</span>
-              <span
-                class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
-                :class="levelConfig[formation.level]?.class"
-              >{{ levelConfig[formation.level]?.label }}</span>
-            </div>
-            <p class="mt-0.5 truncate text-xs text-gray-500">{{ formation.description || 'Aucune description' }}</p>
-            <div class="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-gray-400">
-              <span class="flex items-center gap-1">
-                <BookOpen class="h-3 w-3" />
-                {{ formatDate(formation.created_at) }}
-              </span>
-              <span v-if="formation.duration" class="flex items-center gap-1">
-                <Clock class="h-3 w-3" />
-                {{ formation.duration }}
-              </span>
-              <span class="flex items-center gap-1">
-                <Users class="h-3 w-3" />
-                {{ formation.participants }} participant{{ formation.participants > 1 ? 's' : '' }}
-              </span>
-              <span v-if="formatDateRange(formation)" class="flex items-center gap-1">
-                <Calendar class="h-3 w-3" />
-                {{ formatDateRange(formation) }}
-              </span>
-              <span v-if="formation.departments.length > 0" class="flex items-center gap-1 text-teal-600">
-                <Building2 class="h-3 w-3" />
-                {{ formation.departments.includes('Tous les départements') ? 'Tous les départements' : formation.departments.join(', ') }}
-              </span>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div class="flex shrink-0 items-center gap-2">
-            <button
-              v-if="formation.status === 'brouillon'"
-              @click="handlePublishDirect(formation.id)"
-              :disabled="publishingId === formation.id"
-              class="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-green-700 disabled:opacity-50"
+            <!-- Icône statut -->
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg"
+              :class="{
+                'bg-amber-100': formation.status === 'brouillon',
+                'bg-green-100': formation.status === 'disponible',
+                'bg-teal-100':  formation.status === 'en_cours',
+                'bg-gray-100':  formation.status === 'terminée'
+              }"
             >
-              <svg v-if="publishingId === formation.id" class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <FileText     v-if="formation.status === 'brouillon'"   class="h-5 w-5 text-amber-600" />
+              <CheckCircle2 v-else-if="formation.status === 'disponible'" class="h-5 w-5 text-green-600" />
+              <PlayCircle   v-else-if="formation.status === 'en_cours'"   class="h-5 w-5 text-teal-600" />
+              <Archive      v-else                                          class="h-5 w-5 text-gray-500" />
+            </div>
+
+            <!-- Infos -->
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <p class="truncate text-sm font-semibold text-gray-900">{{ formation.title }}</p>
+                <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium" :class="statusConfig[formation.status]?.class">{{ statusConfig[formation.status]?.label }}</span>
+                <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{{ formation.category }}</span>
+                <span class="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium" :class="levelConfig[formation.level]?.class">{{ levelConfig[formation.level]?.label }}</span>
+              </div>
+              <p class="mt-0.5 truncate text-xs text-gray-500">{{ formation.description || 'Aucune description' }}</p>
+              <div class="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-gray-400">
+                <span class="flex items-center gap-1"><BookOpen class="h-3 w-3" />{{ formatDate(formation.created_at) }}</span>
+                <span v-if="formation.duration" class="flex items-center gap-1"><Clock class="h-3 w-3" />{{ formation.duration }}</span>
+                <span class="flex items-center gap-1 font-medium text-teal-600">
+                  <Users class="h-3 w-3" />
+                  {{ formation.participants }} inscrit{{ formation.participants > 1 ? 's' : '' }}
+                </span>
+                <span v-if="formatDateRange(formation)" class="flex items-center gap-1"><Calendar class="h-3 w-3" />{{ formatDateRange(formation) }}</span>
+                <span v-if="formation.departments.length > 0" class="flex items-center gap-1 text-teal-600">
+                  <Building2 class="h-3 w-3" />
+                  {{ formation.departments.includes('Tous les départements') ? 'Tous les départements' : formation.departments.join(', ') }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Actions + chevron -->
+            <div class="flex shrink-0 items-center gap-2">
+              <button
+                v-if="formation.status === 'brouillon'"
+                @click.stop="handlePublishDirect(formation.id)"
+                :disabled="publishingId === formation.id"
+                class="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-green-700 disabled:opacity-50"
+              >
+                <svg v-if="publishingId === formation.id" class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <Send v-else class="h-3.5 w-3.5" />
+                {{ publishingId === formation.id ? 'Envoi...' : 'Envoyer' }}
+              </button>
+              <button
+                @click.stop="openEditModal(formation.id)"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-600"
+              >
+                <Pencil class="h-3.5 w-3.5" />
+                Modifier
+              </button>
+              <button
+                @click.stop="openDeleteModal(formation.id)"
+                class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
+              >
+                <Trash2 class="h-3.5 w-3.5" />
+              </button>
+              <ChevronDown
+                class="h-4 w-4 text-gray-400 transition-transform duration-200 shrink-0"
+                :class="openFormationId === formation.id ? 'rotate-180 text-teal-500' : ''"
+              />
+            </div>
+          </div>
+
+          <!-- Panneau inscrits -->
+          <div v-if="openFormationId === formation.id" class="border-t bg-teal-50/40 px-6 py-4">
+            <!-- Chargement -->
+            <div v-if="loadingEnrollment[formation.id]" class="flex items-center gap-2 text-xs text-gray-500">
+              <svg class="h-4 w-4 animate-spin text-teal-500" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              <Send v-else class="h-3.5 w-3.5" />
-              {{ publishingId === formation.id ? 'Envoi...' : 'Envoyer' }}
-            </button>
-
-            <button
-              @click="openEditModal(formation.id)"
-              class="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-600"
-            >
-              <Pencil class="h-3.5 w-3.5" />
-              Modifier
-            </button>
-
-            <button
-              @click="openDeleteModal(formation.id)"
-              class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
-            >
-              <Trash2 class="h-3.5 w-3.5" />
-            </button>
+              Chargement des inscrits…
+            </div>
+            <!-- Aucun inscrit -->
+            <div v-else-if="!enrolledCache[formation.id]?.length" class="flex items-center gap-2 text-xs text-gray-400">
+              <UserCheck class="h-4 w-4" />
+              Aucun employé inscrit à cette formation pour l'instant.
+            </div>
+            <!-- Liste inscrits -->
+            <div v-else>
+              <p class="mb-3 flex items-center gap-1.5 text-xs font-semibold text-teal-700">
+                <UserCheck class="h-3.5 w-3.5" />
+                {{ enrolledCache[formation.id].length }} employé{{ enrolledCache[formation.id].length > 1 ? 's' : '' }} inscrit{{ enrolledCache[formation.id].length > 1 ? 's' : '' }}
+              </p>
+              <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <div
+                  v-for="emp in enrolledCache[formation.id]"
+                  :key="emp.name"
+                  class="flex items-center justify-between rounded-lg border border-teal-100 bg-white px-3 py-2"
+                >
+                  <div class="min-w-0">
+                    <p class="truncate text-xs font-medium text-gray-900">{{ emp.name }}</p>
+                    <p class="truncate text-xs text-gray-400">{{ emp.department }} · {{ emp.position }}</p>
+                  </div>
+                  <span class="ml-2 shrink-0 rounded-full px-2 py-0.5 text-xs font-medium" :class="statusRegConfig[emp.status]?.class">
+                    {{ statusRegConfig[emp.status]?.label ?? emp.status }}
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
+
         </div>
       </div>
 
@@ -459,7 +533,9 @@ const confirmDelete = async () => {
         <div
           v-for="formation in filteredFormations"
           :key="formation.id"
-          class="flex flex-col rounded-xl border border-gray-200 bg-gray-50/40 p-4 transition hover:shadow-sm"
+          class="flex flex-col rounded-xl border border-gray-200 bg-gray-50/40 p-4 transition hover:shadow-sm cursor-pointer"
+          :class="openFormationId === formation.id ? 'border-teal-200 bg-teal-50/20' : ''"
+          @click="toggleEnrollees(formation.id)"
         >
           <!-- En-tête carte -->
           <div class="mb-3 flex items-start gap-3">
@@ -472,41 +548,37 @@ const confirmDelete = async () => {
                 'bg-gray-100':  formation.status === 'terminée'
               }"
             >
-              <FileText    v-if="formation.status === 'brouillon'"  class="h-4 w-4 text-amber-600" />
+              <FileText     v-if="formation.status === 'brouillon'"   class="h-4 w-4 text-amber-600" />
               <CheckCircle2 v-else-if="formation.status === 'disponible'" class="h-4 w-4 text-green-600" />
               <PlayCircle   v-else-if="formation.status === 'en_cours'"   class="h-4 w-4 text-teal-600" />
-              <Archive      v-else                                         class="h-4 w-4 text-gray-500" />
+              <Archive      v-else                                          class="h-4 w-4 text-gray-500" />
             </div>
             <div class="min-w-0 flex-1">
               <h3 class="truncate text-sm font-semibold text-gray-900">{{ formation.title }}</h3>
               <div class="mt-1 flex flex-wrap gap-1">
-                <span
-                  class="rounded-full px-1.5 py-0.5 text-xs font-medium"
-                  :class="statusConfig[formation.status]?.class"
-                >{{ statusConfig[formation.status]?.label }}</span>
+                <span class="rounded-full px-1.5 py-0.5 text-xs font-medium" :class="statusConfig[formation.status]?.class">{{ statusConfig[formation.status]?.label }}</span>
                 <span class="rounded-full bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">{{ formation.category }}</span>
-                <span
-                  class="rounded-full px-1.5 py-0.5 text-xs font-medium"
-                  :class="levelConfig[formation.level]?.class"
-                >{{ levelConfig[formation.level]?.label }}</span>
+                <span class="rounded-full px-1.5 py-0.5 text-xs font-medium" :class="levelConfig[formation.level]?.class">{{ levelConfig[formation.level]?.label }}</span>
               </div>
             </div>
+            <ChevronDown
+              class="h-4 w-4 shrink-0 text-gray-400 transition-transform duration-200 mt-0.5"
+              :class="openFormationId === formation.id ? 'rotate-180 text-teal-500' : ''"
+            />
           </div>
 
           <p class="mb-3 line-clamp-2 text-xs text-gray-500">{{ formation.description || 'Aucune description' }}</p>
 
           <div class="mb-4 flex-1 space-y-1.5 text-xs text-gray-500">
             <div v-if="formation.duration" class="flex items-center gap-1.5">
-              <Clock class="h-3 w-3 text-gray-400 shrink-0" />
-              {{ formation.duration }}
+              <Clock class="h-3 w-3 text-gray-400 shrink-0" />{{ formation.duration }}
             </div>
-            <div class="flex items-center gap-1.5">
-              <Users class="h-3 w-3 text-gray-400 shrink-0" />
-              {{ formation.participants }} participant{{ formation.participants > 1 ? 's' : '' }}
+            <div class="flex items-center gap-1.5 font-medium text-teal-600">
+              <Users class="h-3 w-3 shrink-0" />
+              {{ formation.participants }} inscrit{{ formation.participants > 1 ? 's' : '' }}
             </div>
             <div v-if="formatDateRange(formation)" class="flex items-center gap-1.5">
-              <Calendar class="h-3 w-3 text-gray-400 shrink-0" />
-              {{ formatDateRange(formation) }}
+              <Calendar class="h-3 w-3 text-gray-400 shrink-0" />{{ formatDateRange(formation) }}
             </div>
             <div v-if="formation.departments.length > 0" class="flex items-center gap-1.5 text-teal-600">
               <Building2 class="h-3 w-3 shrink-0" />
@@ -514,11 +586,46 @@ const confirmDelete = async () => {
             </div>
           </div>
 
+          <!-- Panneau inscrits (dans la carte) -->
+          <div v-if="openFormationId === formation.id" class="mb-3 rounded-lg border border-teal-100 bg-white p-3">
+            <div v-if="loadingEnrollment[formation.id]" class="flex items-center gap-2 text-xs text-gray-500">
+              <svg class="h-3.5 w-3.5 animate-spin text-teal-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Chargement…
+            </div>
+            <div v-else-if="!enrolledCache[formation.id]?.length" class="flex items-center gap-1.5 text-xs text-gray-400">
+              <UserCheck class="h-3.5 w-3.5" />Aucun inscrit pour l'instant.
+            </div>
+            <div v-else>
+              <p class="mb-2 flex items-center gap-1 text-xs font-semibold text-teal-700">
+                <UserCheck class="h-3.5 w-3.5" />
+                {{ enrolledCache[formation.id].length }} inscrit{{ enrolledCache[formation.id].length > 1 ? 's' : '' }}
+              </p>
+              <div class="space-y-1.5">
+                <div
+                  v-for="emp in enrolledCache[formation.id]"
+                  :key="emp.name"
+                  class="flex items-center justify-between rounded-md bg-gray-50 px-2.5 py-1.5"
+                >
+                  <div class="min-w-0">
+                    <p class="truncate text-xs font-medium text-gray-900">{{ emp.name }}</p>
+                    <p class="truncate text-xs text-gray-400">{{ emp.department }}</p>
+                  </div>
+                  <span class="ml-2 shrink-0 rounded-full px-2 py-0.5 text-xs font-medium" :class="statusRegConfig[emp.status]?.class">
+                    {{ statusRegConfig[emp.status]?.label ?? emp.status }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Actions carte -->
           <div class="mt-auto flex flex-wrap gap-2">
             <button
               v-if="formation.status === 'brouillon'"
-              @click="handlePublishDirect(formation.id)"
+              @click.stop="handlePublishDirect(formation.id)"
               :disabled="publishingId === formation.id"
               class="inline-flex flex-1 items-center justify-center gap-1 rounded-lg bg-green-600 px-2 py-1.5 text-xs font-medium text-white transition hover:bg-green-700 disabled:opacity-50"
             >
@@ -530,14 +637,14 @@ const confirmDelete = async () => {
               {{ publishingId === formation.id ? 'Envoi...' : 'Envoyer' }}
             </button>
             <button
-              @click="openEditModal(formation.id)"
+              @click.stop="openEditModal(formation.id)"
               class="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-600"
             >
               <Pencil class="h-3 w-3" />
               Modifier
             </button>
             <button
-              @click="openDeleteModal(formation.id)"
+              @click.stop="openDeleteModal(formation.id)"
               class="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-gray-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-500"
             >
               <Trash2 class="h-3 w-3" />
