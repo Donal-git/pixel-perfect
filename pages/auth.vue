@@ -1,13 +1,14 @@
 <script setup lang="ts">
 definePageMeta({ layout: false })
 
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 import { useRegistrationRequestStore } from '~/stores/registrationRequest'
 import { ArrowLeft, Send, LogIn, UserPlus, Eye, EyeOff } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const requestStore = useRegistrationRequestStore()
+const runtimeConfig = useRuntimeConfig()
 
 // ── Vue active : 'login' | 'request' | 'success' ────────────────────────────
 const view = ref<'login' | 'request' | 'success'>('login')
@@ -30,16 +31,19 @@ const handleLogin = async () => {
 }
 
 // ── Demande de compte ────────────────────────────────────────────────────────
-const DEPARTMENTS = [
-  'Direction',
-  'Ressources Humaines',
-  'Finance & Comptabilité',
-  'Informatique',
-  'Commercial & Vente',
-  'Marketing & Communication',
-  'Juridique',
-  'Logistique & Supply Chain',
-]
+const DEPARTMENTS = ref<string[]>([])
+
+onMounted(async () => {
+  try {
+    const res = await $fetch<{ data: { name: string; status?: string }[] }>(
+      `${runtimeConfig.public.apiBase}/departments?limit=100`
+    )
+    const active = res.data.filter(d => (d.status ?? 'active') === 'active').map(d => d.name).sort()
+    if (active.length > 0) DEPARTMENTS.value = active
+  } catch {
+    // fallback si l'API est inaccessible
+  }
+})
 
 const form = ref({
   fullName:   '',
