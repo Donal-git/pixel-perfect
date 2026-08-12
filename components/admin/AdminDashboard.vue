@@ -96,7 +96,7 @@ const systemStatus = computed(() => {
   return [
     { label: 'Configuration', status: config.companyName || 'Défaut', ok: true },
     { label: 'Sondages/mois', status: `${surveyStore.surveys.length}/${config.maxSurveysPerMonth}`, ok: surveyStore.surveys.length < config.maxSurveysPerMonth },
-    { label: 'Surveys anonymes', status: config.allowAnonymousSurveys ? 'Autorisés' : 'Interdits', ok: true },
+    { label: 'Sondages anonymes', status: config.allowAnonymousSurveys ? 'Autorisés' : 'Interdits', ok: true },
     { label: 'Départements', status: `${appConfigStore.departments.length} actifs`, ok: true }
   ]
 })
