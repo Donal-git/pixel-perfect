@@ -143,58 +143,94 @@ const activityColor = (type: 'survey' | 'personnel' | 'formation') => {
     </div>
 
     <!-- KPI CARDS -->
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4">
 
-      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-slate-500">Total utilisateurs</p>
-            <p class="mt-1 text-3xl font-bold text-slate-900">{{ stats.totalUsers }}</p>
-          </div>
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-teal-50">
-            <Users class="h-6 w-6 text-teal-600" />
-          </div>
-        </div>
-        <p class="mt-3 text-xs text-slate-400">{{ stats.activeUsers }} actifs · {{ stats.inactiveUsers }} inactifs</p>
-      </div>
 
-      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-slate-500">Sondages actifs</p>
-            <p class="mt-1 text-3xl font-bold text-slate-900">{{ stats.activeSurveys }}</p>
-          </div>
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50">
-            <FileText class="h-6 w-6 text-emerald-600" />
-          </div>
-        </div>
-        <p class="mt-3 text-xs text-slate-400">{{ stats.draftSurveys }} brouillon(s) · {{ stats.closedSurveys }} terminé(s)</p>
-      </div>
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(0,1fr))] gap-4">
 
-      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-slate-500">Formations en cours</p>
-            <p class="mt-1 text-3xl font-bold text-slate-900">{{ stats.ongoingFormations }}</p>
-          </div>
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
-            <GraduationCap class="h-6 w-6 text-slate-600" />
-          </div>
-        </div>
-        <p class="mt-3 text-xs text-slate-400">{{ stats.availableFormations }} disponibles · {{ stats.totalParticipants }} participants</p>
-      </div>
+        <!-- Total utilisateurs -->
+        <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm text-slate-500">Total utilisateurs</p>
+              <p class="mt-1 text-3xl font-bold text-slate-900">
+                {{ stats.totalUsers }}
+              </p>
+            </div>
 
-      <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-slate-500">Participation moyenne</p>
-            <p class="mt-1 text-3xl font-bold text-slate-900">{{ stats.avgParticipationRate }}%</p>
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal-50">
+              <Users class="h-6 w-6 text-teal-600" />
+            </div>
           </div>
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-50">
-            <TrendingUp class="h-6 w-6 text-amber-600" />
-          </div>
+
+          <p class="mt-3 truncate text-xs text-slate-400">
+            {{ stats.activeUsers }} actifs · {{ stats.inactiveUsers }} inactifs
+          </p>
         </div>
-        <p class="mt-3 text-xs text-slate-400">{{ stats.departmentCount }} département(s) actifs</p>
+
+
+        <!-- Sondages actifs -->
+        <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm text-slate-500">Sondages actifs</p>
+              <p class="mt-1 text-3xl font-bold text-slate-900">
+                {{ stats.activeSurveys }}
+              </p>
+            </div>
+
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+              <FileText class="h-6 w-6 text-emerald-600" />
+            </div>
+          </div>
+
+          <p class="mt-3 truncate text-xs text-slate-400">
+            {{ stats.draftSurveys }} brouillon(s) · {{ stats.closedSurveys }} terminé(s)
+          </p>
+        </div>
+
+
+        <!-- Formations en cours -->
+        <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm text-slate-500">Formations en cours</p>
+              <p class="mt-1 text-3xl font-bold text-slate-900">
+                {{ stats.ongoingFormations }}
+              </p>
+            </div>
+
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+              <GraduationCap class="h-6 w-6 text-slate-600" />
+            </div>
+          </div>
+
+          <p class="mt-3 truncate text-xs text-slate-400">
+            {{ stats.availableFormations }} disponibles · {{ stats.totalParticipants }} participants
+          </p>
+        </div>
+
+
+        <!-- Participation moyenne -->
+        <!-- <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm text-slate-500">Participation moyenne</p>
+              <p class="mt-1 text-3xl font-bold text-slate-900">
+                {{ stats.avgParticipationRate }}%
+              </p>
+            </div>
+
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50">
+              <TrendingUp class="h-6 w-6 text-amber-600" />
+            </div>
+          </div>
+
+          <p class="mt-3 truncate text-xs text-slate-400">
+            {{ stats.departmentCount }} département(s) actifs
+          </p>
+        </div> -->
+
       </div>
     </div>
 
