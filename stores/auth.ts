@@ -42,15 +42,18 @@ export const useAuthStore = defineStore('auth', () => {
   const initAuth = async () => { await fetchUser() }
 
   // ── Login via real API ──────────────────────────────────────────────────────
-  const login = async (email: string, password: string) => {
+  const login = async (identifier: string, password: string) => {
     loading.value = true
     try {
       const config = useRuntimeConfig()
+      const normalizedIdentifier = identifier.trim()
+      const isEmail = normalizedIdentifier.includes('@')
+      const phone = normalizedIdentifier.replace(/[\s().-]/g, '')
       const res = await $fetch<{ token: string; data: any }>(
         `${config.public.apiBase}/users/login`, 
         { method: 'POST', 
-          body: { email: email.trim(), 
-            password: password.trim() 
+          body: { ...(isEmail ? { email: normalizedIdentifier } : { phone }),
+            password: password.trim()
           } 
         }
       )

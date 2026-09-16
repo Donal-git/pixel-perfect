@@ -13,7 +13,7 @@ const requestStore = useRegistrationRequestStore()
 const view = ref<'login' | 'request' | 'success'>('login')
 
 // ── Connexion ────────────────────────────────────────────────────────────────
-const email    = ref('')
+const identifier = ref('')
 const password = ref('')
 const loginLoading   = ref(false)
 const loginError     = ref('')
@@ -21,8 +21,18 @@ const showPassword   = ref(false)
 
 const handleLogin = async () => {
   loginError.value = ''
+  const value = identifier.value.trim()
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  const normalizedPhone = value.replace(/[\s().-]/g, '')
+  const phonePattern = /^(?:\+?[1-9]\d{7,14}|0[1-9]\d{8})$/
+
+  if (!emailPattern.test(value) && !phonePattern.test(normalizedPhone)) {
+    loginError.value = 'Saisissez une adresse email ou un numéro de téléphone valide.'
+    return
+  }
+
   loginLoading.value = true
-  const result = await authStore.login(email.value, password.value)
+  const result = await authStore.login(value, password.value)
   if (!result.success) {
     loginError.value = result.message || 'Email ou mot de passe incorrect'
   }
@@ -116,13 +126,13 @@ const resetRequest = () => {
 
           <form @submit.prevent="handleLogin" class="space-y-4">
             <div>
-              <label class="mb-1.5 block text-sm font-medium text-gray-700">Email</label>
+              <label class="mb-1.5 block text-sm font-medium text-gray-700">Email ou téléphone</label>
               <input
-                v-model="email"
-                type="email"
+                v-model="identifier"
+                type="text"
                 required
-                autocomplete="email"
-                placeholder="votre@email.com"
+                autocomplete="username"
+                placeholder="votre@email.com ou +226 70 00 00 00"
                 class="w-full rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-teal-400 focus:ring-2 focus:ring-teal-100"
               />
             </div>
