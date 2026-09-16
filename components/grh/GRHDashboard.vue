@@ -43,15 +43,17 @@ const departmentParticipation = computed(() => {
   const departments = new Set(surveyStore.surveys.flatMap(s => s.sent_to))
   const result: { name: string; rate: number; surveysCount: number; activeCount: number; responseCount: number; employeeCount: number }[] = []
   for (const dept of departments) {
+    const deptSurveysList = surveyStore.surveys.filter(s => s.sent_to.includes(dept))
     const deptSurveys = deptSurveyMap.value[dept]
     const deptEmployees = personnelStore.members.filter(m => m.department === dept && m.role === 'employee')
-    const deptResponses = surveyStore.responses.filter(r => {
+    const deptResponseKeys = new Set(surveyStore.responses.filter(r => {
       const employee = personnelStore.members.find(e => e.id === r.employee_id)
-      return employee?.department === dept && r.status === 'submitted'
-    })
-    const rate = deptEmployees.length > 0
-      ? Math.round((deptResponses.length / deptEmployees.length) * 100) : 0
-    result.push({ name: dept, rate, surveysCount: deptSurveys?.total || 0, activeCount: deptSurveys?.active || 0, responseCount: deptResponses.length, employeeCount: deptEmployees.length })
+      return employee?.department === dept && r.status === 'submitted' && deptSurveysList.some(s => s.id === r.survey_id)
+    }).map(r => `${r.survey_id}:${r.employee_id}`))
+    const expectedResponses = deptEmployees.length * deptSurveysList.length
+    const rate = expectedResponses > 0
+      ? Math.min(100, Math.round((deptResponseKeys.size / expectedResponses) * 100)) : 0
+    result.push({ name: dept, rate, surveysCount: deptSurveys?.total || 0, activeCount: deptSurveys?.active || 0, responseCount: deptResponseKeys.size, employeeCount: deptEmployees.length })
   }
   return result.sort((a, b) => b.rate - a.rate)
 })
